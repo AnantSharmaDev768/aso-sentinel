@@ -12,12 +12,12 @@
 
 ## 1. 12 Deployed Contracts & Live Verification Status
 
-All 12 contracts are deployed on Ethereum Sepolia and verified on **Sourcify** (Exact Match) and visible on Sepolia Blockscout & Etherscan:
+All 12 contracts are deployed on Ethereum Sepolia and source-verified on **Sourcify** (exact match; checked 2026-09-19). The links below open Sepolia Etherscan. Source verification proves the deployed bytecode matches this repository's source; it is **not** a security audit.
 
 | Contract | Symbol / Role | Sepolia Contract Address | Sourcify Verification | Solc Version |
 |----------|---------------|--------------------------|-----------------------|--------------|
-| **`MockRWA`** | `gem` (mPAXG) | [`0xb9c3458426070220dFADA63E41cD6D291c6C1eAe`](https://sepolia.etherscan.io/address/0xb9c3458426070220dFADA63E41cD6D291c6C1eAe) | `exact_match` ✅ | 0.8.24 |
-| **`MockAggregator`** | `feed` ($2,500) | [`0x2648A9D44C33992D814DA80468653111fD3901D4`](https://sepolia.etherscan.io/address/0x2648A9D44C33992D814DA80468653111fD3901D4) | `exact_match` ✅ | 0.8.24 |
+| **`MockRWA`** | `gem` (mPAXG) | [`0xb9c3458426070220dFADA63E41cD6D291c6C1eAe`](https://sepolia.etherscan.io/address/0xb9c3458426070220dFADA63E41cD6D291c6C1eAe) | `exact_match` ✅ | 0.8.37 |
+| **`MockAggregator`** | `feed` ($2,500) | [`0x2648A9D44C33992D814DA80468653111fD3901D4`](https://sepolia.etherscan.io/address/0x2648A9D44C33992D814DA80468653111fD3901D4) | `exact_match` ✅ | 0.8.37 |
 | **`PriceFeedAdapter`** | Multipli Adapter | [`0x747912D7bD3942b6067d16eC61C69a8bBcEB3851`](https://sepolia.etherscan.io/address/0x747912D7bD3942b6067d16eC61C69a8bBcEB3851) | `exact_match` ✅ | 0.6.12 |
 | **`OSM`** | Oracle Security Module | [`0xE515DE7b94b63A3f7b3245661B752cbbfde19Ed6`](https://sepolia.etherscan.io/address/0xE515DE7b94b63A3f7b3245661B752cbbfde19Ed6) | `exact_match` ✅ | 0.6.12 |
 | **`Vat` (Baseline)** | Multipli Core Accounting | [`0x6762Afe88F4761109141A8E2d296EA038b178483`](https://sepolia.etherscan.io/address/0x6762Afe88F4761109141A8E2d296EA038b178483) | `exact_match` ✅ | 0.6.12 |
@@ -26,10 +26,10 @@ All 12 contracts are deployed on Ethereum Sepolia and verified on **Sourcify** (
 | **`Vat` (Protected)** | Guarded Accounting Vault | [`0x79150869244eDcde87e709F14577a08C90c994bB`](https://sepolia.etherscan.io/address/0x79150869244eDcde87e709F14577a08C90c994bB) | `exact_match` ✅ | 0.6.12 |
 | **`Spotter` (Protected)** | Guarded Collateral Pricing | [`0x5AEc269BbE8Cb7c3D81097040284F888F6f25FCA`](https://sepolia.etherscan.io/address/0x5AEc269BbE8Cb7c3D81097040284F888F6f25FCA) | `exact_match` ✅ | 0.6.12 |
 | **`GemJoin5` (Protected)**| Guarded Join Adapter | [`0xDEA615cdeC0CeD2B15093A71124d659A98ABBD11`](https://sepolia.etherscan.io/address/0xDEA615cdeC0CeD2B15093A71124d659A98ABBD11) | `exact_match` ✅ | 0.6.12 |
-| **`ASOVerifier`** | 3-of-5 Quorum Verifier | [`0x7a46253E1722b52387a0bac610a2CFD18458530B`](https://sepolia.etherscan.io/address/0x7a46253E1722b52387a0bac610a2CFD18458530B) | `exact_match` ✅ | 0.8.24 |
-| **`ASOSentinel`** | Active Ceiling Guard | [`0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2`](https://sepolia.etherscan.io/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2) | `exact_match` ✅ | 0.8.24 |
+| **`ASOVerifier`** | 3-of-5 Quorum Verifier | [`0x7a46253E1722b52387a0bac610a2CFD18458530B`](https://sepolia.etherscan.io/address/0x7a46253E1722b52387a0bac610a2CFD18458530B) | `exact_match` ✅ | 0.8.37 |
+| **`ASOSentinel`** | Active Ceiling Guard | [`0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2`](https://sepolia.etherscan.io/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2) | `exact_match` ✅ | 0.8.37 |
 
-The full address configuration is recorded in [`deployments/11155111.json`](file:///d:/WORKSTATION/aso-sentinel/deployments/11155111.json).
+The full address configuration is recorded in [`deployments/11155111.json`](../deployments/11155111.json).
 
 ---
 
@@ -95,7 +95,22 @@ cd demo && npm run demo:sepolia
 
 ---
 
-## 5. Live Scenario Execution Results
+## 5. Evidence and its limits
+
+| Evidence | What it shows | What it does **not** show |
+|---|---|---|
+| Local anvil demo (`npm run demo`, 22 checks) | All 8 scenarios incl. the 25 h stale-feed case, using time travel on a private local chain | Anything on a public network |
+| Sepolia runs below (27 checks per run, two runs) | Real public transactions: accepted/rejected attestations, restriction, repay-while-restricted, recovery, baseline over-borrowing | The 25 h stale-feed case (Multipli's adapter keeps its 24 h `maxDelay`; time cannot be warped on Sepolia) |
+| Sourcify exact match (12/12) | Deployed bytecode = this repo's source | That the code is secure: **no external audit** has been done |
+| Price sources | 5 keys generated and **controlled by the team**, signing prices the runner chooses | Independent production data providers |
+| Multipli contracts | Copies of Multipli's verified mainnet source deployed **by us** on a testnet | Any integration with, deployment by, or endorsement from Multipli |
+
+**Verification of the tables below (2026-09-19):** every one of the 34 linked transactions was checked against Sepolia: it exists, was sent by the relayer, and its receipt status matches the expected outcome (success or revert).
+Run 2's raw JSON output is committed as [`deployments/11155111-scenarios-run2.json`](../deployments/11155111-scenarios-run2.json). Run 1's raw JSON file was overwritten during the session, so Run 1 is evidenced by the on-chain transactions linked below. The runner writes `deployments/11155111-scenarios.json` (gitignored); copy it to a new `-runN.json` file to commit future runs.
+Earlier drafts of this page linked three Run 1 transactions that do not exist; they were replaced with the real transactions (relayer nonces 25, 26 and 29).
+The relayer's history also contains one failed transaction at nonce 13 from a first attempt, before the runner read `maxValidity` from the deployment (it signed 1-hour windows; the testnet profile allows 600 s, so the verifier correctly reverted with `InvalidValidityWindow`).
+
+## 6. Live Scenario Execution Results
 
 Both runs completed with **`ALL SCENARIOS BEHAVED AS EXPECTED`** (27 / 27 checks passed in each run).
 
@@ -109,14 +124,14 @@ Both runs completed with **`ALL SCENARIOS BEHAVED AS EXPECTED`** (27 / 27 checks
 | 4 | `S1` | Sentinel not restricted after S1 poke | `restricted=false` | `restricted=false` | ✅ PASS | *(State assertion)* |
 | 5 | `S1` | Borrow 5,000 rwaUSD on BASELINE Vat | `success` | `success` | ✅ PASS | [`0x4ade9b99...`](https://sepolia.etherscan.io/tx/0x4ade9b99cb56a430e3f3f01f1ac5e00d0f34eb4a105e0ab373eb97c4350733e0) |
 | 6 | `S1` | Borrow 5,000 rwaUSD on PROTECTED Vat | `success` | `success` | ✅ PASS | [`0xea8e5315...`](https://sepolia.etherscan.io/tx/0xea8e5315d8e5d16e73ea19467f6e81f8bbf912e9ca960b3fe7e87dc3a23b9be5) |
-| 7 | `S4` | Submit tampered signature -> must revert InvalidSignature | `revert contains 'InvalidSignature'` | `reverted: InvalidSignature(0)` | ✅ PASS | [`0x4e705cb8...`](https://sepolia.etherscan.io/tx/0x4e705cb89cebc8cb76c3bf0450530403328e19e782977d29bc561a00a08e16f3) |
-| 8 | `S5` | Submit replayed nonce round -> must revert NonceNotIncreasing | `revert contains 'NonceNotIncreasing'` | `reverted: NonceNotIncreasing(1, ` | ✅ PASS | [`0x23f79024...`](https://sepolia.etherscan.io/tx/0x23f7902409f5827725ca76045958aa260a92d37c959725f828ceb52bf4698ea0) |
+| 7 | `S4` | Submit tampered signature -> must revert InvalidSignature | `revert contains 'InvalidSignature'` | `reverted: InvalidSignature(0)` | ✅ PASS | [`0x5e905e44...`](https://sepolia.etherscan.io/tx/0x5e905e442d7a430de82f3a61a5f55780e4a453026e6e525c757afd6fa68f0620) |
+| 8 | `S5` | Submit replayed nonce round -> must revert NonceNotIncreasing | `revert contains 'NonceNotIncreasing'` | `reverted: NonceNotIncreasing(1, ` | ✅ PASS | [`0xe7cdcda4...`](https://sepolia.etherscan.io/tx/0xe7cdcda48f6fd3631271c3f338e2fadd5609c5d3dab48096b34e00b5fc8d73d0) |
 | 9 | `S3` | ASOVerifier.submitRound (>1% spread -> DISPUTED) | `success` | `success` | ✅ PASS | [`0x31654790...`](https://sepolia.etherscan.io/tx/0x3165479014ce71d288c12e089ca0d0a769d136f4aa5d0d57e85e32e5003f1eef) |
 | 10 | `S3` | Verifier status is DISPUTED (3) | `status=3` | `status=3` | ✅ PASS | *(State assertion)* |
 | 11 | `S3` | ASOSentinel.poke() (throttles line to 0) | `success` | `success` | ✅ PASS | [`0xe40ef733...`](https://sepolia.etherscan.io/tx/0xe40ef733bd39e338f9b04f37eff01c068f6f59a6e19858b6de42e4ead7251632) |
 | 12 | `S3` | Protected line == 0 after dispute poke | `line=0` | `line=0` | ✅ PASS | *(State assertion)* |
 | 13 | `S3` | Sentinel restricted == true after dispute poke | `restricted=true` | `restricted=true` | ✅ PASS | *(State assertion)* |
-| 14 | `S3` | Borrow while restricted -> must revert Vat/ceiling-exceeded | `revert contains 'Vat/ceiling-exceeded'` | `reverted: Error(Vat/ceiling-exce` | ✅ PASS | [`0x2eb84860...`](https://sepolia.etherscan.io/tx/0x2eb84860167733f380020bf21aa807530635bf79471f496734106ec2808b29f9) |
+| 14 | `S3` | Borrow while restricted -> must revert Vat/ceiling-exceeded | `revert contains 'Vat/ceiling-exceeded'` | `reverted: Error(Vat/ceiling-exce` | ✅ PASS | [`0x48833e65...`](https://sepolia.etherscan.io/tx/0x48833e6539c68acd3f699c5bdb5085f7ec4bd9ac720b99c656a378184735c796) |
 | 15 | `S8` | Repay 2,000 rwaUSD while restricted (S8) | `success` | `success` | ✅ PASS | [`0xdd34ef69...`](https://sepolia.etherscan.io/tx/0xdd34ef699090f99c7491ddecc67bf149b6909b3391e40ee6037f2f6fe49ceca8) |
 | 16 | `S7` | ASOVerifier.submitRound (agreeing data restores OK) | `success` | `success` | ✅ PASS | [`0x227a2396...`](https://sepolia.etherscan.io/tx/0x227a239685bbfd801f9fd45e30194cc8157e71cfb0e97ceff6c119e7a745745d) |
 | 17 | `S7` | ASOSentinel.poke() (restores headroom) | `success` | `success` | ✅ PASS | [`0x22b5d4db...`](https://sepolia.etherscan.io/tx/0x22b5d4db973c4e5f2de279cf3a6724a27bab7d3ab97aebd7d41c72094d4209a6) |

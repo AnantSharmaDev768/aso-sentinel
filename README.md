@@ -7,8 +7,8 @@ Hackathon prototype for the Multipli Hackathon (GraVITas '26, VIT Vellore). Prob
 Web3 oracle reliability, accuracy and resilience.
 
 > **What this is:** a tested prototype that runs **Multipli's own verified mainnet contracts**
-> (Vat, Spotter, OSM, PriceFeedAdapter, GemJoin5) on a local chain, side by side with and without our
-> protection layer.
+> (Vat, Spotter, OSM, PriceFeedAdapter, GemJoin5) on a local chain, and as our own deployment on the Sepolia
+> testnet, side by side with and without our protection layer.
 >
 > **What this is not:** it is not integrated with, deployed to, or endorsed by Multipli, and it is not
 > audited. Production use would need Multipli governance to add the Sentinel as a Vat ward, plus real
@@ -169,11 +169,22 @@ Talk track for a 2–3 minute live demo: [docs/DEMO.md](docs/DEMO.md).
 
 ## Public testnet (Ethereum Sepolia)
 
-A complete 12-contract deployment runs on Ethereum Sepolia (Chain ID `11155111`), verified on Sourcify:
+The same 12-contract system is also deployed on the public Ethereum Sepolia testnet (chain ID `11155111`) by our
+team, with all 12 contracts source-verified on Sourcify (exact match). The Sepolia runner (`npm run demo:sepolia`)
+passed **27/27 checks in each of two runs**, with every linked transaction checked against the chain:
 - **`ASOSentinel`:** [`0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2`](https://sepolia.etherscan.io/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2)
 - **`ASOVerifier`:** [`0x7a46253E1722b52387a0bac610a2CFD18458530B`](https://sepolia.etherscan.io/address/0x7a46253E1722b52387a0bac610a2CFD18458530B)
 
-All 12 contract addresses, Sourcify verification records, and live scenario transactions are documented in [docs/SEPOLIA.md](docs/SEPOLIA.md).
+All 12 addresses and every scenario transaction are listed in [docs/SEPOLIA.md](docs/SEPOLIA.md). Keep these distinctions in mind:
+
+- **Local simulation vs. public testnet.** `npm run demo` runs on a private anvil chain with time travel, including the
+  25-hour stale-feed case. The Sepolia runs are real public transactions, but exclude that case and use shortened
+  timing (OSM hop 60 s, attestation `maxAge` 300 s).
+- **Prototype, not Multipli integration.** These are copies of Multipli's verified source deployed by us; Multipli has
+  not deployed, integrated or endorsed this.
+- **Source-verified, not audited.** Sourcify shows the bytecode matches this repo; no external security audit exists.
+- **Team-controlled sources.** The 5 price sources are keys generated and controlled by the team; the feed and
+  collateral token are mocks. No independent production data is involved.
 
 ## Known limitations
 

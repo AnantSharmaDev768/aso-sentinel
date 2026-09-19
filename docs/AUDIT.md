@@ -61,6 +61,12 @@ design followed the team's brief, except for one change the team approved: the r
 5. **Low (claims): the diagram placed a mock inside the "Multipli verified" box.** Fixed.
 6. **Low (demo reliability): `--step` hung with piped stdin, and receipt polling made the demo take
    4 minutes.** Both fixed; the demo now takes about 10 seconds.
+7. **Medium (claims): three Sepolia transaction links in `docs/SEPOLIA.md` pointed to hashes that do not exist
+   on Sepolia** (Run 1, rows 7, 8 and 14, introduced while the docs were written). Found by checking every linked
+   transaction against the chain; replaced with the real transactions (relayer nonces 25, 26, 29). All 34 links now
+   verify: correct sender and the expected success/revert status.
+8. **Low (claims): `docs/SEPOLIA.md` listed solc 0.8.24 for our contracts;** Sourcify records 0.8.37 (0.8.24 is only
+   the pragma minimum). Corrected.
 
 **Residual risks (documented, not fixed):** collateral withdrawal at a stale-high price; keeper
 dependency; a single faulty source can force `DISPUTED` (fail-closed); relayer choice within the 1%
@@ -105,8 +111,8 @@ All 8 required scenarios run as deterministic Foundry tests **and** as mined tra
 | `npm install viem@2.56.8` | ✔ 0 vulnerabilities |
 | `npm run demo` × 2 | ✔ 22/22 checks each; result tables identical; 12–14 s |
 | `npm run demo -- --step` with piped Enter / early EOF | ✔ |
-| GitHub Actions CI | ✔ All tests and build green on remote push |
-| Sepolia Testnet Deployment | ✔ 12 contracts deployed, Sourcify exact_match, 27/27 scenario checks passed across two runs ([docs/SEPOLIA.md](SEPOLIA.md)) |
+| GitHub Actions CI | ✔ Green on every push so far: run 1 (`main` e48b0b4), runs 2–3 (`feat/sepolia-deploy` 45ca924, 63d7cc3). Jobs: fmt + build + all tests; anvil demo |
+| Sepolia testnet (public, **not** local) | ✔ 12 contracts deployed from a team burner key; 12/12 Sourcify exact match (source verification, **not** an audit); **27/27 checks passed in each of two runs**; all 34 linked transactions checked against on-chain receipts. Sources are team-controlled keys. The 25 h stale-feed case is local-only. See [SEPOLIA.md](SEPOLIA.md) |
 | **Not run** | Slither/Aderyn (not installed), third-party review |
 
 ## F. Frontend
@@ -121,8 +127,8 @@ OSM value and `has`, ASO price, status and nonces, both Vat ceilings and debts, 
 | Criterion | Strongest evidence | Weakest point | Improve before submission |
 |---|---|---|---|
 | Innovation | Wires signed-attestation checks to Multipli's *actual* Vat ceiling, and exposes a verified OSM staleness gap | The building blocks are well-known (Aave Sentinel, DssAutoLine, RedStone, Multipli's own docs) | Say it plainly: "working implementation of a documented design, applied to the deployed system" |
-| Real-world impact | Reproduces bad-debt minting with Multipli's real code (178k debt vs $150k collateral) | Local chain only; the scenario requires the upstream feed to fail or freeze, which we did not observe on mainnet | Show the 24h adapter window and the OSM `has=true` behavior with mainnet values |
-| Technical execution | 91 tests, invariants, 17/17 mutants killed, 100% branch coverage, 12-contract live Sepolia deploy (verified) | No third-party audit | Deployed & verified on Ethereum Sepolia testnet |
+| Real-world impact | Reproduces bad-debt minting with Multipli's real code (178k debt vs $150k collateral locally; the same over-borrowing pattern with real Sepolia transactions) | Needs the upstream feed to fail or freeze, which we did not observe on mainnet; testnet uses mocks and team-controlled sources | Show the 24h adapter window and the OSM `has=true` behavior with mainnet values |
+| Technical execution | 91 tests, invariants, 17/17 mutants killed, 100% branch coverage, 12-contract Sepolia deployment (Sourcify-verified source) | No third-party audit | Merge the reviewed Sepolia branch into `main` |
 | Usability | One command, about 10 s, deterministic, exit code; permissionless poke | Terminal only; keeper needed | Optional read-only web panel |
 | Presentation | `docs/DEMO.md` 2:50 talk track, architecture diagram, honest limitations | Dense terminal output | Rehearse with `demo:step`; record a backup video |
 
@@ -130,15 +136,15 @@ OSM value and `has`, ASO price, status and nonces, both Vat ceilings and debts, 
 
 ### 1. Executive verdict: **READY WITH FIXES**
 
-The contracts, tests, on-chain demo, and Sepolia testnet deployment are complete, verified and reproducible. The remaining items are
+The contracts, tests and local on-chain demo are complete, verified and reproducible; the Sepolia testnet deployment is done and its evidence verified on-chain. The remaining items are
 submission logistics:
-- The repository is committed and pushed to `origin/feat/sepolia-deploy` with green CI.
+- The Sepolia work is on `feat/sepolia-deploy` (CI green) and **not yet merged** into `main`.
 - There is no recorded backup video yet.
 - Nobody else on the team has run it yet on a second machine.
 
 ### 2. Critical blockers
 
-1. Team sync: Ensure all teammates pull the latest `feat/sepolia-deploy` branch with submodules.
+1. Review and merge `feat/sepolia-deploy` into `main`, so the submitted default branch contains the testnet evidence.
 2. The demo has been run on one machine only. A teammate should run it from a clean clone
    (`git clone --recurse-submodules`, Foundry v1.8.3, Node ≥ 20).
 
@@ -152,8 +158,7 @@ submission logistics:
 ### 4. Medium-priority (only if time remains)
 
 1. A read-only web panel that polls the same contract reads as the STATE panel.
-2. A public testnet deployment (requires a non-demo deploy script with env-provided keys; never use the
-   anvil keys).
+2. ~~A public testnet deployment~~ Done on Sepolia (see SEPOLIA.md).
 3. Keeper incentive or a borrow-path hook design note.
 4. Slither/Aderyn run.
 
