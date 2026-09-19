@@ -165,6 +165,7 @@ Talk track for a 2–3 minute live demo: [docs/DEMO.md](docs/DEMO.md).
   each remove or weaken one security check, and **all 17 are caught** by at least one failing test.
 - **On-chain demo:** 22 expected-vs-actual checks from mined transactions.
 - Full review, findings and residual risks: [docs/AUDIT.md](docs/AUDIT.md).
+- Sepolia testnet deployment guide: [docs/SEPOLIA.md](docs/SEPOLIA.md).
 
 ## Known limitations
 
