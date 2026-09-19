@@ -1,0 +1,42 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+optimizer = true
+optimizer_runs = 200
+evm_version = "cancun"
+# Foundry 1.x dynamic test linking skipped recompiling tests after src changes in this project
+# (tests ran against stale bytecode; found by mutation testing). Keep it off.
+dynamic_test_linking = false
+fs_permissions = [{ access = "read-write", path = "./deployments" }]
+remappings = [
+  "forge-std/=lib/forge-std/src/",
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "ds-value/=src/multipli/lib/ds-value/",
+  "ds-thing/=src/multipli/lib/ds-thing/",
+  "ds-auth/=src/multipli/lib/ds-auth/",
+  "ds-note/=src/multipli/lib/ds-note/",
+  "ds-math/=src/multipli/lib/ds-math/",
+]
+
+# Multipli's verified contracts are compiled exactly as deployed on Ethereum:
+# solc 0.6.12, optimizer on, 8000 runs, istanbul (see src/multipli/blockscout-meta.json).
+additional_compiler_profiles = [
+  { name = "multipli", optimizer_runs = 8000, evm_version = "istanbul" },
+]
+compilation_restrictions = [
+  { paths = "src/multipli/**", version = "=0.6.12", optimizer_runs = 8000, evm_version = "istanbul" },
+]
+
+[fmt]
+ignore = ["src/multipli/**"]
+
+[fuzz]
+runs = 1000
+seed = "0x5eed"
+
+[invariant]
+runs = 128
+depth = 64

@@ -1,0 +1,57 @@
+name: CI
+
+permissions: {}
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Foundry build, format, tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.8.3
+
+      - name: Forge fmt (our code; vendored Multipli sources are excluded)
+        run: forge fmt --check
+
+      - name: Forge build
+        run: forge build --sizes
+
+      - name: Forge tests (unit, fuzz, invariant)
+        run: forge test -vvv
+
+  demo:
+    name: On-chain demo (anvil)
+    runs-on: ubuntu-latest
+    needs: check
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.8.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: forge build
+      - run: npm ci
+        working-directory: demo
+      - run: npm run demo
+        working-directory: demo

@@ -1,0 +1,3 @@
+# Keep LF everywhere so vendored Multipli sources stay byte-identical to the verified mainnet sources
+# (script/vendor/verify-multipli-sources.mjs compares exact bytes), including on Windows clones.
+* text=auto eol=lf

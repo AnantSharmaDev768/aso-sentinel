@@ -1,0 +1,72 @@
+{
+  "Vat": {
+    "addr": "0xbC22e8C15bC476EF4FD0124c5A03b23607e30D2C",
+    "contract": "Vat",
+    "compiler": "v0.6.12+commit.27d51765",
+    "optimization": true,
+    "runs": 8000,
+    "evm": "istanbul",
+    "verified": true,
+    "fully": true,
+    "files": [
+      "src/vat.sol"
+    ]
+  },
+  "Spotter": {
+    "addr": "0xf3aee748355bb07CBe702B4ff8dBE6118b34e2A2",
+    "contract": "Spotter",
+    "compiler": "v0.6.12+commit.27d51765",
+    "optimization": true,
+    "runs": 8000,
+    "evm": "istanbul",
+    "verified": true,
+    "fully": true,
+    "files": [
+      "src/spot.sol"
+    ]
+  },
+  "OSM": {
+    "addr": "0x89fbAe0302b8790D55fa36E6Ab09ac93F865993a",
+    "contract": "OSM",
+    "compiler": "0.6.12+commit.27d51765",
+    "optimization": true,
+    "runs": 8000,
+    "evm": "istanbul",
+    "verified": true,
+    "fully": true,
+    "files": [
+      "src/osm.sol",
+      "lib/ds-token/lib/ds-auth/src/auth.sol",
+      "lib/ds-token/lib/ds-math/src/math.sol",
+      "lib/ds-value/lib/ds-thing/lib/ds-note/src/note.sol",
+      "lib/ds-value/lib/ds-thing/src/thing.sol",
+      "lib/ds-value/src/value.sol"
+    ]
+  },
+  "PriceFeedAdapter": {
+    "addr": "0x82F5790Bd1c96790E4c3a3ebC8142bD4D6F8b1CD",
+    "contract": "PriceFeedAdapter",
+    "compiler": "v0.6.12+commit.27d51765",
+    "optimization": true,
+    "runs": 8000,
+    "evm": "istanbul",
+    "verified": true,
+    "fully": true,
+    "files": [
+      "src/adapter.sol"
+    ]
+  },
+  "GemJoin": {
+    "addr": "0x3c9567C3b9c20E72858cD5714209EA7D7a8011fD",
+    "contract": "GemJoin5",
+    "compiler": "v0.6.12+commit.27d51765",
+    "optimization": true,
+    "runs": 8000,
+    "evm": "istanbul",
+    "verified": true,
+    "fully": true,
+    "files": [
+      "src/join.sol"
+    ]
+  }
+}

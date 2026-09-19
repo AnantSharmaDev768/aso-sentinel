@@ -1,0 +1,16 @@
+{
+  "name": "aso-sentinel-demo",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic on-chain demo of ASO Sentinel vs the Multipli baseline on a local anvil chain",
+  "scripts": {
+    "demo": "node run-demo.mjs",
+    "demo:step": "node run-demo.mjs --step"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "viem": "2.56.8"
+  }
+}

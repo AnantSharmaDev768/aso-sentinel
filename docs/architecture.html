@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ASO Sentinel Architecture</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#ffffff;--fg:#1a1a1a;--muted:#555}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111;--fg:#eee;--muted:#aaa}}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;margin:0;padding:24px 16px;max-width:1200px;margin-inline:auto}
+h1{font-size:1.4rem}h2{font-size:1.1rem;color:var(--muted)}.mermaid{overflow-x:auto;margin-bottom:32px}
+</style></head><body>
+<h1>ASO Sentinel — architecture (generated from README.md)</h1>
+<h2>Components and data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    subgraph OFF["Off-chain (demo: anvil test keys)"]
+        SRC["5 independent price sources<br/>sign EIP-712 attestations"]
+        FEEDER["Feeder account<br/>(stops = no updates)"]
+        KEEP["Relayer / keeper<br/>(anyone)"]
+    end
+
+    subgraph MOCKS["Mocks"]
+        AGG["MockAggregator<br/>Chainlink-style feed"]
+    end
+
+    subgraph MULTIPLI["Multipli verified mainnet code (unmodified)"]
+        ADP["PriceFeedAdapter<br/>stale ⇒ (0,false)"]
+        ADP --> OSM["OSM (1h delay)<br/>keeps cached price, has=true"]
+        OSM --> SPB["Spotter"] --> VATB["Vat — BASELINE<br/>no protection"]
+        OSM --> SPP["Spotter"] --> VATP["Vat — PROTECTED"]
+    end
+
+    subgraph OURS["Our prototype"]
+        VER["ASOVerifier<br/>EIP-712 · N-of-M · nonce · expiry<br/>freshness · disagreement"]
+        SEN["ASOSentinel<br/>poke()"]
+    end
+
+    FEEDER -- setAnswer --> AGG
+    AGG --> ADP
+    SRC -- signatures --> KEEP
+    KEEP -- submitRound --> VER
+    KEEP -- poke --> SEN
+    VER -- "status, price" --> SEN
+    ADP -. "peek(): feed valid?" .-> SEN
+    VATP -. "spot (price it lends at)" .-> SEN
+    SEN == "file(ilk,'line',x) — its ONLY write" ==> VATP
+</pre>
+<h2>Sentinel state machine</h2>
+<pre class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> Restricted: deploy
+    Restricted --> Open: healthy + NEW round
+    Open --> Open: healthy
+    Open --> Restricted: unhealthy
+    Restricted --> Restricted: unhealthy / no new round
+    note left of Restricted
+        line = 0
+        new debt reverts
+        repay allowed
+    end note
+    note right of Open
+        line = min(debt + gap, maxLine)
+    end note
+</pre>
+<script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({ startOnLoad: false, securityLevel: "strict" });
+try { await mermaid.run(); document.body.dataset.rendered = "ok"; }
+catch (e) { document.body.dataset.rendered = "error: " + e.message; console.error(e); }
+</script></body></html>
