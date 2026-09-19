@@ -12,22 +12,22 @@
 
 ## 1. 12 Deployed Contracts & Live Verification Status
 
-All 12 contracts are deployed on Ethereum Sepolia and source-verified on **Sourcify** (exact match; checked 2026-09-19). The links below open Sepolia Etherscan. Source verification proves the deployed bytecode matches this repository's source; it is **not** a security audit.
+All 12 contracts are deployed on Ethereum Sepolia and source-verified on **Sourcify** (exact match; checked 2026-09-19). Address links open **Blockscout**, which reads Sourcify and shows "Contract source code verified (exact match)". **Sepolia Etherscan does not show these contracts as verified**, because we verified through Sourcify only (no Etherscan API key was used); Etherscan still shows the transactions. Source verification proves the deployed bytecode matches this repository's source; it is **not** a security audit.
 
-| Contract | Symbol / Role | Sepolia Contract Address | Sourcify Verification | Solc Version |
+| Contract | Symbol / Role | Sepolia Contract Address (Blockscout) | Sourcify Verification | Solc Version |
 |----------|---------------|--------------------------|-----------------------|--------------|
-| **`MockRWA`** | `gem` (mPAXG) | [`0xb9c3458426070220dFADA63E41cD6D291c6C1eAe`](https://sepolia.etherscan.io/address/0xb9c3458426070220dFADA63E41cD6D291c6C1eAe) | `exact_match` ✅ | 0.8.37 |
-| **`MockAggregator`** | `feed` ($2,500) | [`0x2648A9D44C33992D814DA80468653111fD3901D4`](https://sepolia.etherscan.io/address/0x2648A9D44C33992D814DA80468653111fD3901D4) | `exact_match` ✅ | 0.8.37 |
-| **`PriceFeedAdapter`** | Multipli Adapter | [`0x747912D7bD3942b6067d16eC61C69a8bBcEB3851`](https://sepolia.etherscan.io/address/0x747912D7bD3942b6067d16eC61C69a8bBcEB3851) | `exact_match` ✅ | 0.6.12 |
-| **`OSM`** | Oracle Security Module | [`0xE515DE7b94b63A3f7b3245661B752cbbfde19Ed6`](https://sepolia.etherscan.io/address/0xE515DE7b94b63A3f7b3245661B752cbbfde19Ed6) | `exact_match` ✅ | 0.6.12 |
-| **`Vat` (Baseline)** | Multipli Core Accounting | [`0x6762Afe88F4761109141A8E2d296EA038b178483`](https://sepolia.etherscan.io/address/0x6762Afe88F4761109141A8E2d296EA038b178483) | `exact_match` ✅ | 0.6.12 |
-| **`Spotter` (Baseline)** | Collateral Pricing | [`0xbdBde656820e6FF8fc0D5538bbcE4daF942Fc322`](https://sepolia.etherscan.io/address/0xbdBde656820e6FF8fc0D5538bbcE4daF942Fc322) | `exact_match` ✅ | 0.6.12 |
-| **`GemJoin5` (Baseline)** | Collateral Join Adapter | [`0x613efe6a5F6Eec7457A10Bf2E04d016628F90f79`](https://sepolia.etherscan.io/address/0x613efe6a5F6Eec7457A10Bf2E04d016628F90f79) | `exact_match` ✅ | 0.6.12 |
-| **`Vat` (Protected)** | Guarded Accounting Vault | [`0x79150869244eDcde87e709F14577a08C90c994bB`](https://sepolia.etherscan.io/address/0x79150869244eDcde87e709F14577a08C90c994bB) | `exact_match` ✅ | 0.6.12 |
-| **`Spotter` (Protected)** | Guarded Collateral Pricing | [`0x5AEc269BbE8Cb7c3D81097040284F888F6f25FCA`](https://sepolia.etherscan.io/address/0x5AEc269BbE8Cb7c3D81097040284F888F6f25FCA) | `exact_match` ✅ | 0.6.12 |
-| **`GemJoin5` (Protected)**| Guarded Join Adapter | [`0xDEA615cdeC0CeD2B15093A71124d659A98ABBD11`](https://sepolia.etherscan.io/address/0xDEA615cdeC0CeD2B15093A71124d659A98ABBD11) | `exact_match` ✅ | 0.6.12 |
-| **`ASOVerifier`** | 3-of-5 Quorum Verifier | [`0x7a46253E1722b52387a0bac610a2CFD18458530B`](https://sepolia.etherscan.io/address/0x7a46253E1722b52387a0bac610a2CFD18458530B) | `exact_match` ✅ | 0.8.37 |
-| **`ASOSentinel`** | Active Ceiling Guard | [`0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2`](https://sepolia.etherscan.io/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2) | `exact_match` ✅ | 0.8.37 |
+| **`MockRWA`** | `gem` (mPAXG) | [`0xb9c3458426070220dFADA63E41cD6D291c6C1eAe`](https://eth-sepolia.blockscout.com/address/0xb9c3458426070220dFADA63E41cD6D291c6C1eAe?tab=contract) | `exact_match` ✅ | 0.8.37 |
+| **`MockAggregator`** | `feed` ($2,500) | [`0x2648A9D44C33992D814DA80468653111fD3901D4`](https://eth-sepolia.blockscout.com/address/0x2648A9D44C33992D814DA80468653111fD3901D4?tab=contract) | `exact_match` ✅ | 0.8.37 |
+| **`PriceFeedAdapter`** | Multipli Adapter | [`0x747912D7bD3942b6067d16eC61C69a8bBcEB3851`](https://eth-sepolia.blockscout.com/address/0x747912D7bD3942b6067d16eC61C69a8bBcEB3851?tab=contract) | `exact_match` ✅ | 0.6.12 |
+| **`OSM`** | Oracle Security Module | [`0xE515DE7b94b63A3f7b3245661B752cbbfde19Ed6`](https://eth-sepolia.blockscout.com/address/0xE515DE7b94b63A3f7b3245661B752cbbfde19Ed6?tab=contract) | `exact_match` ✅ | 0.6.12 |
+| **`Vat` (Baseline)** | Multipli Core Accounting | [`0x6762Afe88F4761109141A8E2d296EA038b178483`](https://eth-sepolia.blockscout.com/address/0x6762Afe88F4761109141A8E2d296EA038b178483?tab=contract) | `exact_match` ✅ | 0.6.12 |
+| **`Spotter` (Baseline)** | Collateral Pricing | [`0xbdBde656820e6FF8fc0D5538bbcE4daF942Fc322`](https://eth-sepolia.blockscout.com/address/0xbdBde656820e6FF8fc0D5538bbcE4daF942Fc322?tab=contract) | `exact_match` ✅ | 0.6.12 |
+| **`GemJoin5` (Baseline)** | Collateral Join Adapter | [`0x613efe6a5F6Eec7457A10Bf2E04d016628F90f79`](https://eth-sepolia.blockscout.com/address/0x613efe6a5F6Eec7457A10Bf2E04d016628F90f79?tab=contract) | `exact_match` ✅ | 0.6.12 |
+| **`Vat` (Protected)** | Guarded Accounting Vault | [`0x79150869244eDcde87e709F14577a08C90c994bB`](https://eth-sepolia.blockscout.com/address/0x79150869244eDcde87e709F14577a08C90c994bB?tab=contract) | `exact_match` ✅ | 0.6.12 |
+| **`Spotter` (Protected)** | Guarded Collateral Pricing | [`0x5AEc269BbE8Cb7c3D81097040284F888F6f25FCA`](https://eth-sepolia.blockscout.com/address/0x5AEc269BbE8Cb7c3D81097040284F888F6f25FCA?tab=contract) | `exact_match` ✅ | 0.6.12 |
+| **`GemJoin5` (Protected)**| Guarded Join Adapter | [`0xDEA615cdeC0CeD2B15093A71124d659A98ABBD11`](https://eth-sepolia.blockscout.com/address/0xDEA615cdeC0CeD2B15093A71124d659A98ABBD11?tab=contract) | `exact_match` ✅ | 0.6.12 |
+| **`ASOVerifier`** | 3-of-5 Quorum Verifier | [`0x7a46253E1722b52387a0bac610a2CFD18458530B`](https://eth-sepolia.blockscout.com/address/0x7a46253E1722b52387a0bac610a2CFD18458530B?tab=contract) | `exact_match` ✅ | 0.8.37 |
+| **`ASOSentinel`** | Active Ceiling Guard | [`0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2`](https://eth-sepolia.blockscout.com/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2?tab=contract) | `exact_match` ✅ | 0.8.37 |
 
 The full address configuration is recorded in [`deployments/11155111.json`](../deployments/11155111.json).
 

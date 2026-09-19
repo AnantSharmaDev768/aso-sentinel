@@ -67,6 +67,9 @@ design followed the team's brief, except for one change the team approved: the r
    verify: correct sender and the expected success/revert status.
 8. **Low (claims): `docs/SEPOLIA.md` listed solc 0.8.24 for our contracts;** Sourcify records 0.8.37 (0.8.24 is only
    the pragma minimum). Corrected.
+9. **Low (claims): Sepolia address links pointed to Etherscan, which shows the contracts as *unverified*** (we verified
+   via Sourcify only). Found by opening the links during the clean-clone check. Address links now go to Blockscout,
+   which displays the Sourcify-verified source; the docs state that Etherscan does not show it.
 
 **Residual risks (documented, not fixed):** collateral withdrawal at a stale-high price; keeper
 dependency; a single faulty source can force `DISPUTED` (fail-closed); relayer choice within the 1%

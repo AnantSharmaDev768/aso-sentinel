@@ -172,8 +172,8 @@ Talk track for a 2–3 minute live demo: [docs/DEMO.md](docs/DEMO.md).
 The same 12-contract system is also deployed on the public Ethereum Sepolia testnet (chain ID `11155111`) by our
 team, with all 12 contracts source-verified on Sourcify (exact match). The Sepolia runner (`npm run demo:sepolia`)
 passed **27/27 checks in each of two runs**, with every linked transaction checked against the chain:
-- **`ASOSentinel`:** [`0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2`](https://sepolia.etherscan.io/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2)
-- **`ASOVerifier`:** [`0x7a46253E1722b52387a0bac610a2CFD18458530B`](https://sepolia.etherscan.io/address/0x7a46253E1722b52387a0bac610a2CFD18458530B)
+- **`ASOSentinel`:** [`0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2`](https://eth-sepolia.blockscout.com/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2?tab=contract) (verified source on Blockscout; [Etherscan](https://sepolia.etherscan.io/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2) shows transactions but not the source)
+- **`ASOVerifier`:** [`0x7a46253E1722b52387a0bac610a2CFD18458530B`](https://eth-sepolia.blockscout.com/address/0x7a46253E1722b52387a0bac610a2CFD18458530B?tab=contract) (verified source on Blockscout; [Etherscan](https://sepolia.etherscan.io/address/0x7a46253E1722b52387a0bac610a2CFD18458530B) shows transactions but not the source)
 
 All 12 addresses and every scenario transaction are listed in [docs/SEPOLIA.md](docs/SEPOLIA.md). Keep these distinctions in mind:
 
