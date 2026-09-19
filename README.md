@@ -127,7 +127,7 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Requires [Foundry](https://book.getfoundry.sh/) (tested with v1.8.3) and Node ≥ 20.
 
 ```bash
-git clone --recurse-submodules <repo> && cd aso-sentinel
+git clone --recurse-submodules https://github.com/AnantSharmaDev768/aso-sentinel.git && cd aso-sentinel
 forge build
 forge test                       # unit, fuzz and invariant tests
 cd demo && npm ci && npm run demo  # on-chain demo on a fresh local anvil chain (~10 s)
@@ -166,6 +166,14 @@ Talk track for a 2–3 minute live demo: [docs/DEMO.md](docs/DEMO.md).
 - **On-chain demo:** 22 expected-vs-actual checks from mined transactions.
 - Full review, findings and residual risks: [docs/AUDIT.md](docs/AUDIT.md).
 - Sepolia testnet deployment guide: [docs/SEPOLIA.md](docs/SEPOLIA.md).
+
+## Public testnet (Ethereum Sepolia)
+
+A complete 12-contract deployment runs on Ethereum Sepolia (Chain ID `11155111`), verified on Sourcify:
+- **`ASOSentinel`:** [`0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2`](https://sepolia.etherscan.io/address/0xbd83Ce0AAf941D87Af2fB50C0B4fF04Dd20FB0b2)
+- **`ASOVerifier`:** [`0x7a46253E1722b52387a0bac610a2CFD18458530B`](https://sepolia.etherscan.io/address/0x7a46253E1722b52387a0bac610a2CFD18458530B)
+
+All 12 contract addresses, Sourcify verification records, and live scenario transactions are documented in [docs/SEPOLIA.md](docs/SEPOLIA.md).
 
 ## Known limitations
 

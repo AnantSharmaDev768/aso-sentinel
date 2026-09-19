@@ -1,0 +1,245 @@
+[
+  {
+    "scenario": "S1",
+    "label": "ASOVerifier.submitRound (3-of-5 quorum, $2,500)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0x0712d971de377246327fbaed73c8361bd74561b7aea8265152734474f7ef979f",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x0712d971de377246327fbaed73c8361bd74561b7aea8265152734474f7ef979f"
+  },
+  {
+    "scenario": "S1",
+    "label": "ASOSentinel.poke() (opens bounded headroom)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0x19ec530ee012407b14d448c1b20b85d607a84e047b7c274cd16d33ec09ca84c3",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x19ec530ee012407b14d448c1b20b85d607a84e047b7c274cd16d33ec09ca84c3"
+  },
+  {
+    "scenario": "S1",
+    "label": "Protected line > 0 after S1 poke",
+    "expect": "line > 0",
+    "actual": "line=204000000000000000000000000000000000000000000000000",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S1",
+    "label": "Sentinel not restricted after S1 poke",
+    "expect": "restricted=false",
+    "actual": "restricted=false",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S1",
+    "label": "Borrow 5,000 rwaUSD on BASELINE Vat",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0x7b814ceb3494f2f442ea0bb27e7619809722e52b5c438088ec4327b8561c569e",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x7b814ceb3494f2f442ea0bb27e7619809722e52b5c438088ec4327b8561c569e"
+  },
+  {
+    "scenario": "S1",
+    "label": "Borrow 5,000 rwaUSD on PROTECTED Vat",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0x1090358b3c335b8f6fdbf8e724545873441e77a7e5636225118c131af3c191e6",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x1090358b3c335b8f6fdbf8e724545873441e77a7e5636225118c131af3c191e6"
+  },
+  {
+    "scenario": "S4",
+    "label": "Submit tampered signature -> must revert InvalidSignature",
+    "expect": "revert contains 'InvalidSignature'",
+    "actual": "reverted: InvalidSignature(0)",
+    "pass": true,
+    "txHash": "0x9d0fe6d1cb4238a303e3d341ebf870ab39879e5ebcc5d4f335d2af38e113c4af",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x9d0fe6d1cb4238a303e3d341ebf870ab39879e5ebcc5d4f335d2af38e113c4af"
+  },
+  {
+    "scenario": "S5",
+    "label": "Submit replayed nonce round -> must revert NonceNotIncreasing",
+    "expect": "revert contains 'NonceNotIncreasing'",
+    "actual": "reverted: NonceNotIncreasing(6, 6)",
+    "pass": true,
+    "txHash": "0x570b859a0a6b5ac4c9f9a18a670638553b1c301534ae1d8b92f2a530b0233533",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x570b859a0a6b5ac4c9f9a18a670638553b1c301534ae1d8b92f2a530b0233533"
+  },
+  {
+    "scenario": "S3",
+    "label": "ASOVerifier.submitRound (>1% spread -> DISPUTED)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0xfe8978d940a335e5250b6d3d9f669e89cba3f0865b8eb17feb390b250b27b8d9",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0xfe8978d940a335e5250b6d3d9f669e89cba3f0865b8eb17feb390b250b27b8d9"
+  },
+  {
+    "scenario": "S3",
+    "label": "Verifier status is DISPUTED (3)",
+    "expect": "status=3",
+    "actual": "status=3",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S3",
+    "label": "ASOSentinel.poke() (throttles line to 0)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0x6b3f05f08eaab20ea7c62fd0827c4f320c11cdc3050440758c3caff6bbca69b1",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x6b3f05f08eaab20ea7c62fd0827c4f320c11cdc3050440758c3caff6bbca69b1"
+  },
+  {
+    "scenario": "S3",
+    "label": "Protected line == 0 after dispute poke",
+    "expect": "line=0",
+    "actual": "line=0",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S3",
+    "label": "Sentinel restricted == true after dispute poke",
+    "expect": "restricted=true",
+    "actual": "restricted=true",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S3",
+    "label": "Borrow while restricted -> must revert Vat/ceiling-exceeded",
+    "expect": "revert contains 'Vat/ceiling-exceeded'",
+    "actual": "reverted: Error(Vat/ceiling-exceeded)",
+    "pass": true,
+    "txHash": "0xeb65cffb99b84df853dadbc71d273a840b3c4b434a67de6e43d56f7d1862aa24",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0xeb65cffb99b84df853dadbc71d273a840b3c4b434a67de6e43d56f7d1862aa24"
+  },
+  {
+    "scenario": "S8",
+    "label": "Repay 2,000 rwaUSD while restricted (S8)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0xc002fdee5997dc2b3be49fce967c68cff855f0c644be719e81180db70d60fe0c",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0xc002fdee5997dc2b3be49fce967c68cff855f0c644be719e81180db70d60fe0c"
+  },
+  {
+    "scenario": "S7",
+    "label": "ASOVerifier.submitRound (agreeing data restores OK)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0xd4b638d667922916d3b569e927f99bc74fd3f0084929f495f32e4371ea810155",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0xd4b638d667922916d3b569e927f99bc74fd3f0084929f495f32e4371ea810155"
+  },
+  {
+    "scenario": "S7",
+    "label": "ASOSentinel.poke() (restores headroom)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0x54a550e5af9437bd7b5f211f72fa4176b3e566935b053d462548a8ea49815468",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x54a550e5af9437bd7b5f211f72fa4176b3e566935b053d462548a8ea49815468"
+  },
+  {
+    "scenario": "S7",
+    "label": "Protected line > 0 after recovery poke",
+    "expect": "line > 0",
+    "actual": "line=207000000000000000000000000000000000000000000000000",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S7",
+    "label": "Sentinel restricted == false after recovery poke",
+    "expect": "restricted=false",
+    "actual": "restricted=false",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S7",
+    "label": "Borrow on PROTECTED Vat after recovery -> succeeds",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0xc2d99ae72ca6ae0abff35982ee50194a868dc54b60ce4ae1631c3e7c24941b7c",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0xc2d99ae72ca6ae0abff35982ee50194a868dc54b60ce4ae1631c3e7c24941b7c"
+  },
+  {
+    "scenario": "S6",
+    "label": "ASOVerifier.submitRound (attests real price dropped to $1,500)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0xfdddafb4051ab2197e1405b1cc245d8388befe45c0ed3ab79ed0ebb5f35e601b",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0xfdddafb4051ab2197e1405b1cc245d8388befe45c0ed3ab79ed0ebb5f35e601b"
+  },
+  {
+    "scenario": "S6",
+    "label": "ASOSentinel.poke() (detects Vat price above attested -> RESTRICTS)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0xb143acefe678ec61518108454cff8c3bcfadc4e3369bcb7c3e153eb700b59eaa",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0xb143acefe678ec61518108454cff8c3bcfadc4e3369bcb7c3e153eb700b59eaa"
+  },
+  {
+    "scenario": "S6",
+    "label": "Sentinel lastReason is VAT_PRICE_ABOVE_ATTESTED (6)",
+    "expect": "reason=6",
+    "actual": "reason=6",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S6",
+    "label": "Protected line == 0 after S6 poke",
+    "expect": "line=0",
+    "actual": "line=0",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S6",
+    "label": "Sentinel restricted == true after S6 poke",
+    "expect": "restricted=true",
+    "actual": "restricted=true",
+    "pass": true,
+    "txHash": null,
+    "etherscanUrl": null
+  },
+  {
+    "scenario": "S6",
+    "label": "Baseline Vat still allows borrow at stale price (Bad Debt)",
+    "expect": "success",
+    "actual": "success",
+    "pass": true,
+    "txHash": "0x01c12647638d44ea3e4615f5bf71d2b2ca81bd7751293b705a6c6bad352c5c6f",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0x01c12647638d44ea3e4615f5bf71d2b2ca81bd7751293b705a6c6bad352c5c6f"
+  },
+  {
+    "scenario": "S6",
+    "label": "Protected Vat frob -> reverts with Vat/ceiling-exceeded",
+    "expect": "revert contains 'Vat/ceiling-exceeded'",
+    "actual": "reverted: Error(Vat/ceiling-exceeded)",
+    "pass": true,
+    "txHash": "0xe31d6653781e5e0c0d55effe7b1d36b975fd386e7aa8320f36cf3504b1ebc418",
+    "etherscanUrl": "https://sepolia.etherscan.io/tx/0xe31d6653781e5e0c0d55effe7b1d36b975fd386e7aa8320f36cf3504b1ebc418"
+  }
+]

@@ -70,6 +70,15 @@ const etherscan = (hash) => `https://sepolia.etherscan.io/tx/${hash}`;
 const abi = (file, name) => JSON.parse(readFileSync(join(ROOT, "out", file, `${name}.json`))).abi;
 
 const scenariosResults = [];
+let allPassed = true;
+
+function recordCheck(scenario, label, expect, actual, pass, txHash = null) {
+  if (!pass) allPassed = false;
+  const etherscanUrl = txHash ? etherscan(txHash) : null;
+  scenariosResults.push({ scenario, label, expect, actual, pass, txHash, etherscanUrl });
+  const mark = pass ? `${C.g}✔ PASS${C.x}` : `${C.r}✖ FAIL${C.x}`;
+  log(`   ${mark} [${scenario}] ${label} | expect: ${expect} | actual: ${actual}`);
+}
 
 async function main() {
   title("ASO Sentinel — Sepolia Testnet Runner");
@@ -107,8 +116,9 @@ async function main() {
   );
 
   const balance = await pc.getBalance({ address: relayerAccount.address });
+  const host = new URL(RPC).hostname;
   note(`Relayer:  ${relayerAccount.address} (${formatUnits(balance, 18)} Sepolia ETH)`);
-  note(`Target:   Chain ID ${chainId} (Sepolia) via ${RPC}`);
+  note(`Target:   Chain ID ${chainId} (Sepolia) via ${host}`);
   note(`Vat:      Baseline ${D.baselineVat} | Protected ${D.protectedVat}`);
   note(`Sentinel: ${D.sentinel} | Verifier: ${D.verifier}`);
 
@@ -130,14 +140,18 @@ async function main() {
 
   const ILK = D.ilk;
   const WAD = 10n ** 18n;
-  const RAD = 10n ** 45n;
-  const HOUR = 3600n;
+  const maxValidity = BigInt(D.maxValidity || 600);
 
   const read = (address, a, functionName, args = []) =>
     pc.readContract({ address, abi: a, functionName, args, account: relayerAccount.address });
 
+  const getLine = async (vatAddr) => (await read(vatAddr, A.vat, "ilks", [ILK]))[3];
+  const getRestricted = async () => await read(D.sentinel, A.sentinel, "restricted");
+  const getLastReason = async () => await read(D.sentinel, A.sentinel, "lastReason");
+  const getStatus = async () => await read(D.verifier, A.verifier, "status");
+
   // ------------------------------------------------------------------ transaction sender
-  async function tx(label, address, a, functionName, args, expect = "success", scenario = null) {
+  async function tx(label, address, a, functionName, args, expect = "success", expectedReason = null, scenario = null) {
     let reason = null;
     try {
       await pc.simulateContract({ account: relayerAccount, address, abi: a, functionName, args });
@@ -147,41 +161,52 @@ async function main() {
       else reason = rev?.reason ?? e.shortMessage ?? "Contract reverted";
     }
 
-    // For expected reverts, use fixed gas limit so tx is mined as reverted
-    const gas = expect === "revert" ? 350_000n : undefined;
+    // Use fixed gas 1_000_000 for expected-revert txs so failed call is mined
+    const gas = expect === "revert" ? 1_000_000n : undefined;
     let hash;
     try {
       hash = await wallet.writeContract({ address, abi: a, functionName, args, gas });
     } catch (e) {
-      // If node rejected sendTransaction outright, record and return
-      const pass = expect === "revert";
-      log(`   ${pass ? C.g + "✔" : C.r + "✖"} ${label} (rejected before mempool: ${reason || e.shortMessage})`);
+      // If node rejected sendTransaction outright before mempool
+      const pass = expect === "revert" && (!expectedReason || (reason && reason.includes(expectedReason)));
       if (scenario) {
-        scenariosResults.push({ scenario, label, expect, actual: `rejected: ${reason || e.shortMessage}`, pass });
+        recordCheck(
+          scenario,
+          label,
+          expect === "success" ? "success" : `revert contains '${expectedReason}'`,
+          `rejected: ${reason || e.shortMessage}`,
+          pass
+        );
       }
-      return { ok: false, reason, rc: null };
+      return { ok: false, reason, rc: null, hash: null, pass };
     }
 
     const rc = await pc.waitForTransactionReceipt({ hash });
     const ok = rc.status === "success";
-    const pass = (expect === "success") === ok;
-    const mark = ok ? `${C.g}✔ SUCCESS${C.x}` : `${C.r}✖ REVERTED${C.x}`;
+    let pass = false;
+    if (expect === "success") {
+      pass = ok;
+    } else {
+      // expect === "revert"
+      const reasonMatched = !expectedReason || (reason && reason.includes(expectedReason));
+      pass = !ok && reasonMatched;
+    }
 
+    const mark = ok ? `${C.g}✔ SUCCESS${C.x}` : `${C.r}✖ REVERTED${C.x}`;
     log(`   ${mark} ${label}`);
     log(`     ${C.d}tx: ${etherscan(hash)}${reason ? ` | reason: ${C.y}${reason}${C.d}` : ""}${C.x}`);
 
     if (scenario) {
-      scenariosResults.push({
+      recordCheck(
         scenario,
         label,
-        expect,
-        actual: ok ? "success" : `reverted: ${reason}`,
-        txHash: hash,
-        etherscanUrl: etherscan(hash),
+        expect === "success" ? "success" : `revert contains '${expectedReason}'`,
+        ok ? "success" : `reverted: ${reason}`,
         pass,
-      });
+        hash
+      );
     }
-    return { ok, reason, rc, hash };
+    return { ok, reason, rc, hash, pass };
   }
 
   // ------------------------------------------------------------------ block time & EIP-712 attestations
@@ -199,7 +224,11 @@ async function main() {
     ],
   };
 
-  let nonce = 0n;
+  // Start nonce at lastNonce + 1 so re-runs work seamlessly
+  const lastOnChainNonce = BigInt(await read(D.verifier, A.verifier, "lastNonce"));
+  let nonce = lastOnChainNonce;
+  note(`Starting ASO nonce sequence at ${nonce + 1n} (on-chain lastNonce is ${nonce})`);
+
   async function signRound(usdPrices, n = ++nonce, signersList = sources) {
     const t = await getBlockTime(); // Strictly uses block timestamp
     const atts = [],
@@ -209,7 +238,7 @@ async function main() {
         profileId: D.profileId,
         price: BigInt(usdPrices[i]) * WAD,
         validAfter: t,
-        validUntil: t + HOUR,
+        validUntil: t + maxValidity,
         nonce: n,
         source: signersList[i].address,
       };
@@ -221,12 +250,15 @@ async function main() {
     return { atts, sigs };
   }
 
-  // ------------------------------------------------------------------ setup: prime OSM
-  title("Step 0: Priming Multipli OSM on Sepolia");
+  // ------------------------------------------------------------------ step 0: refresh feed & prime OSM
+  title("Step 0: Refresh Feed ($2,500) & Prime Multipli OSM");
+  // Always refresh feeder answer at start so baseline and feed start fresh
+  await tx("Feeder: MockAggregator.setAnswer($2,500)", D.feed, A.feed, "setAnswer", [250000000000n], "success");
+
   const [, osmHas] = await read(D.osm, A.osm, "peek");
   if (!osmHas) {
     log("   Multipli OSM is uninitialized (cur.has == false). Performing initial poke...");
-    await tx("OSM.poke() (first step)", D.osm, A.osm, "poke", []);
+    await tx("OSM.poke() (first step)", D.osm, A.osm, "poke", [], "success");
 
     log("   Waiting 65s for OSM hop interval (osmHop = 60s) by Sepolia block time...");
     const startT = await getBlockTime();
@@ -241,18 +273,18 @@ async function main() {
       }
     }
 
-    await tx("OSM.poke() (second step, activates price)", D.osm, A.osm, "poke", []);
-    await tx("Baseline Spotter.poke()", D.baselineSpotter, A.spot, "poke", [ILK]);
-    await tx("Protected Spotter.poke()", D.protectedSpotter, A.spot, "poke", [ILK]);
+    await tx("OSM.poke() (second step, activates price)", D.osm, A.osm, "poke", [], "success");
+    await tx("Baseline Spotter.poke()", D.baselineSpotter, A.spot, "poke", [ILK], "success");
+    await tx("Protected Spotter.poke()", D.protectedSpotter, A.spot, "poke", [ILK], "success");
   } else {
     note("OSM is already primed and serving active price.");
   }
 
-  // ------------------------------------------------------------------ collateral deposit
-  title("Step 1: Deposit Collateral (100 mPAXG)");
-  const depositWad = 100n * WAD;
-  await tx("Approve mPAXG (Baseline Join)", D.gem, A.gem, "approve", [D.baselineJoin, depositWad]);
-  await tx("GemJoin5.join (Baseline)", D.baselineJoin, A.join, "join", [relayerAccount.address, depositWad]);
+  // ------------------------------------------------------------------ step 1: deposit collateral (20 mPAXG)
+  title("Step 1: Deposit Collateral (20 mPAXG per system)");
+  const depositWad = 20n * WAD; // 20 mPAXG per system so 1,000 mPAXG lasts many runs
+  await tx("Approve mPAXG (Baseline Join)", D.gem, A.gem, "approve", [D.baselineJoin, depositWad], "success");
+  await tx("GemJoin5.join (Baseline)", D.baselineJoin, A.join, "join", [relayerAccount.address, depositWad], "success");
   await tx("Vat.frob collateral (Baseline)", D.baselineVat, A.vat, "frob", [
     ILK,
     relayerAccount.address,
@@ -260,10 +292,10 @@ async function main() {
     relayerAccount.address,
     depositWad,
     0n,
-  ]);
+  ], "success");
 
-  await tx("Approve mPAXG (Protected Join)", D.gem, A.gem, "approve", [D.protectedJoin, depositWad]);
-  await tx("GemJoin5.join (Protected)", D.protectedJoin, A.join, "join", [relayerAccount.address, depositWad]);
+  await tx("Approve mPAXG (Protected Join)", D.gem, A.gem, "approve", [D.protectedJoin, depositWad], "success");
+  await tx("GemJoin5.join (Protected)", D.protectedJoin, A.join, "join", [relayerAccount.address, depositWad], "success");
   await tx("Vat.frob collateral (Protected)", D.protectedVat, A.vat, "frob", [
     ILK,
     relayerAccount.address,
@@ -271,7 +303,7 @@ async function main() {
     relayerAccount.address,
     depositWad,
     0n,
-  ]);
+  ], "success");
 
   // ------------------------------------------------------------------ scenario S1
   title("Scenario S1: Valid Round + Sentinel Headroom + Borrow");
@@ -279,45 +311,62 @@ async function main() {
   await tx("ASOVerifier.submitRound (3-of-5 quorum, $2,500)", D.verifier, A.verifier, "submitRound", [
     r1.atts,
     r1.sigs,
-  ], "success", "S1");
+  ], "success", null, "S1");
 
-  await tx("ASOSentinel.poke() (opens bounded headroom)", D.sentinel, A.sentinel, "poke", [], "success", "S1");
+  await tx("ASOSentinel.poke() (opens bounded headroom)", D.sentinel, A.sentinel, "poke", [], "success", null, "S1");
 
-  const borrowWad = 10_000n * WAD;
-  await tx("Borrow 10,000 rwaUSD on BASELINE Vat", D.baselineVat, A.vat, "frob", [
+  // State assertion: after S1 poke, line > 0 and restricted == false
+  const s1Line = await getLine(D.protectedVat);
+  const s1Restricted = await getRestricted();
+  recordCheck("S1", "Protected line > 0 after S1 poke", "line > 0", `line=${s1Line}`, s1Line > 0n);
+  recordCheck("S1", "Sentinel not restricted after S1 poke", "restricted=false", `restricted=${s1Restricted}`, s1Restricted === false);
+
+  const borrowWad = 5_000n * WAD;
+  await tx("Borrow 5,000 rwaUSD on BASELINE Vat", D.baselineVat, A.vat, "frob", [
     ILK,
     relayerAccount.address,
     relayerAccount.address,
     relayerAccount.address,
     0n,
     borrowWad,
-  ], "success", "S1");
+  ], "success", null, "S1");
 
-  await tx("Borrow 10,000 rwaUSD on PROTECTED Vat", D.protectedVat, A.vat, "frob", [
+  await tx("Borrow 5,000 rwaUSD on PROTECTED Vat", D.protectedVat, A.vat, "frob", [
     ILK,
     relayerAccount.address,
     relayerAccount.address,
     relayerAccount.address,
     0n,
     borrowWad,
-  ], "success", "S1");
+  ], "success", null, "S1");
 
   // ------------------------------------------------------------------ scenario S4
   title("Scenario S4: Tampered / Forged Signature Reverts");
   const r4 = await signRound([2500, 2500, 2500]);
-  // Tamper signature 0
   const tamperedSig = "0x" + "00".repeat(65);
-  await tx("Submit tampered signature -> must revert", D.verifier, A.verifier, "submitRound", [
-    r4.atts,
-    [tamperedSig, r4.sigs[1], r4.sigs[2]],
-  ], "revert", "S4");
+  await tx(
+    "Submit tampered signature -> must revert InvalidSignature",
+    D.verifier,
+    A.verifier,
+    "submitRound",
+    [r4.atts, [tamperedSig, r4.sigs[1], r4.sigs[2]]],
+    "revert",
+    "InvalidSignature",
+    "S4"
+  );
 
   // ------------------------------------------------------------------ scenario S5
   title("Scenario S5: Replayed Nonce Reverts");
-  await tx("Submit replayed nonce round -> must revert", D.verifier, A.verifier, "submitRound", [
-    r1.atts,
-    r1.sigs,
-  ], "revert", "S5");
+  await tx(
+    "Submit replayed nonce round -> must revert NonceNotIncreasing",
+    D.verifier,
+    A.verifier,
+    "submitRound",
+    [r1.atts, r1.sigs],
+    "revert",
+    "NonceNotIncreasing",
+    "S5"
+  );
 
   // ------------------------------------------------------------------ scenario S3 & S8
   title("Scenario S3: Divergent Sources (Disputed) + Repayment (S8)");
@@ -325,28 +374,40 @@ async function main() {
   await tx("ASOVerifier.submitRound (>1% spread -> DISPUTED)", D.verifier, A.verifier, "submitRound", [
     r3.atts,
     r3.sigs,
-  ], "success", "S3");
+  ], "success", null, "S3");
 
-  await tx("ASOSentinel.poke() (throttles line to 0)", D.sentinel, A.sentinel, "poke", [], "success", "S3");
+  // State assertion: after S3 round, verifier.status() == 3 (DISPUTED)
+  const s3Status = await getStatus();
+  recordCheck("S3", "Verifier status is DISPUTED (3)", "status=3", `status=${s3Status}`, Number(s3Status) === 3);
 
-  await tx("Borrow while restricted -> must revert", D.protectedVat, A.vat, "frob", [
-    ILK,
-    relayerAccount.address,
-    relayerAccount.address,
-    relayerAccount.address,
-    0n,
-    borrowWad,
-  ], "revert", "S3");
+  await tx("ASOSentinel.poke() (throttles line to 0)", D.sentinel, A.sentinel, "poke", [], "success", null, "S3");
+
+  // State assertion: after restricting poke, line == 0 and restricted == true
+  const s3Line = await getLine(D.protectedVat);
+  const s3Restricted = await getRestricted();
+  recordCheck("S3", "Protected line == 0 after dispute poke", "line=0", `line=${s3Line}`, s3Line === 0n);
+  recordCheck("S3", "Sentinel restricted == true after dispute poke", "restricted=true", `restricted=${s3Restricted}`, s3Restricted === true);
+
+  await tx(
+    "Borrow while restricted -> must revert Vat/ceiling-exceeded",
+    D.protectedVat,
+    A.vat,
+    "frob",
+    [ILK, relayerAccount.address, relayerAccount.address, relayerAccount.address, 0n, borrowWad],
+    "revert",
+    "Vat/ceiling-exceeded",
+    "S3"
+  );
 
   // S8: Repayments must remain unblocked while restricted
-  await tx("Repay 5,000 rwaUSD while restricted (S8)", D.protectedVat, A.vat, "frob", [
+  await tx("Repay 2,000 rwaUSD while restricted (S8)", D.protectedVat, A.vat, "frob", [
     ILK,
     relayerAccount.address,
     relayerAccount.address,
     relayerAccount.address,
     0n,
-    -5_000n * WAD,
-  ], "success", "S8");
+    -2_000n * WAD,
+  ], "success", null, "S8");
 
   // ------------------------------------------------------------------ scenario S7
   title("Scenario S7: Recovery Round Restores Borrowing");
@@ -354,9 +415,15 @@ async function main() {
   await tx("ASOVerifier.submitRound (agreeing data restores OK)", D.verifier, A.verifier, "submitRound", [
     r7.atts,
     r7.sigs,
-  ], "success", "S7");
+  ], "success", null, "S7");
 
-  await tx("ASOSentinel.poke() (restores headroom)", D.sentinel, A.sentinel, "poke", [], "success", "S7");
+  await tx("ASOSentinel.poke() (restores headroom)", D.sentinel, A.sentinel, "poke", [], "success", null, "S7");
+
+  // State assertion: after S7 poke, line > 0 and restricted == false
+  const s7Line = await getLine(D.protectedVat);
+  const s7Restricted = await getRestricted();
+  recordCheck("S7", "Protected line > 0 after recovery poke", "line > 0", `line=${s7Line}`, s7Line > 0n);
+  recordCheck("S7", "Sentinel restricted == false after recovery poke", "restricted=false", `restricted=${s7Restricted}`, s7Restricted === false);
 
   await tx("Borrow on PROTECTED Vat after recovery -> succeeds", D.protectedVat, A.vat, "frob", [
     ILK,
@@ -364,8 +431,8 @@ async function main() {
     relayerAccount.address,
     relayerAccount.address,
     0n,
-    borrowWad,
-  ], "success", "S7");
+    1_000n * WAD,
+  ], "success", null, "S7");
 
   // ------------------------------------------------------------------ scenario S6 (instant variant)
   title("Scenario S6: Instant Market Drop (Feeder frozen at $2,500, real price $1,500)");
@@ -374,60 +441,103 @@ async function main() {
   await tx("ASOVerifier.submitRound (attests real price dropped to $1,500)", D.verifier, A.verifier, "submitRound", [
     r6.atts,
     r6.sigs,
-  ], "success", "S6");
+  ], "success", null, "S6");
 
-  await tx("ASOSentinel.poke() (detects Vat price above attested -> RESTRICTS)", D.sentinel, A.sentinel, "poke", [], "success", "S6");
+  await tx("ASOSentinel.poke() (detects Vat price above attested -> RESTRICTS)", D.sentinel, A.sentinel, "poke", [], "success", null, "S6");
 
-  // Baseline has no sentinel: still lends against stale $2,500 price
+  // State assertion: after S6 poke, lastReason == 6 (VAT_PRICE_ABOVE_ATTESTED), line == 0, restricted == true
+  const s6Reason = await getLastReason();
+  const s6Line = await getLine(D.protectedVat);
+  const s6Restricted = await getRestricted();
+  recordCheck("S6", "Sentinel lastReason is VAT_PRICE_ABOVE_ATTESTED (6)", "reason=6", `reason=${s6Reason}`, Number(s6Reason) === 6);
+  recordCheck("S6", "Protected line == 0 after S6 poke", "line=0", `line=${s6Line}`, s6Line === 0n);
+  recordCheck("S6", "Sentinel restricted == true after S6 poke", "restricted=true", `restricted=${s6Restricted}`, s6Restricted === true);
+
+  // Baseline has no sentinel: still lends against stale $2,500 price (bad debt!)
   await tx("Baseline Vat still allows borrow at stale price (Bad Debt)", D.baselineVat, A.vat, "frob", [
     ILK,
     relayerAccount.address,
     relayerAccount.address,
     relayerAccount.address,
     0n,
-    borrowWad,
-  ], "success", "S6");
+    1_000n * WAD,
+  ], "success", null, "S6");
 
   // Protected Vat is restricted: blocks borrow
-  await tx("Protected Vat frob -> reverts with Vat/ceiling-exceeded", D.protectedVat, A.vat, "frob", [
-    ILK,
-    relayerAccount.address,
-    relayerAccount.address,
-    relayerAccount.address,
-    0n,
-    borrowWad,
-  ], "revert", "S6");
+  await tx(
+    "Protected Vat frob -> reverts with Vat/ceiling-exceeded",
+    D.protectedVat,
+    A.vat,
+    "frob",
+    [ILK, relayerAccount.address, relayerAccount.address, relayerAccount.address, 0n, 1_000n * WAD],
+    "revert",
+    "Vat/ceiling-exceeded",
+    "S6"
+  );
 
-  // ------------------------------------------------------------------ optional S2
+  // ------------------------------------------------------------------ optional S2 (--with-waits)
   if (WITH_WAITS) {
-    title("Scenario S2: Attestation Expiry (Waiting 310s for maxAge = 300s)");
-    log("   Waiting 310s by block time for attested round to become STALE...");
+    title("Scenario S2: Attestation Expiry (Waiting > 300s for maxAge = 300s)");
+    // First submit healthy round + poke to ensure open state
+    const s2Pre = await signRound([2500, 2500, 2500]);
+    await tx("ASOVerifier.submitRound (pre-wait round)", D.verifier, A.verifier, "submitRound", [s2Pre.atts, s2Pre.sigs], "success");
+    await tx("ASOSentinel.poke() (pre-wait opens line)", D.sentinel, A.sentinel, "poke", [], "success");
+    const preWaitLine = await getLine(D.protectedVat);
+    recordCheck("S2", "Line opened before wait", "line > 0", `line=${preWaitLine}`, preWaitLine > 0n);
+
+    log("   Waiting > 305s by block time for attested round to become STALE...");
     const s2Start = await getBlockTime();
     while (true) {
       await new Promise((r) => setTimeout(r, 15000));
       const el = Number((await getBlockTime()) - s2Start);
-      process.stdout.write(`\r   Elapsed: ${el}s / 310s...`);
-      if (el >= 310) {
-        log("\n   Staleness elapsed.");
+      process.stdout.write(`\r   Elapsed block time: ${el}s / 305s...`);
+      if (el >= 305) {
+        log("\n   Staleness interval elapsed.");
         break;
       }
     }
-    await tx("ASOSentinel.poke() -> restricts on STALE ASO data", D.sentinel, A.sentinel, "poke", [], "success", "S2");
-    await tx("Borrow on protected Vat -> reverts", D.protectedVat, A.vat, "frob", [
-      ILK,
-      relayerAccount.address,
-      relayerAccount.address,
-      relayerAccount.address,
-      0n,
-      borrowWad,
-    ], "revert", "S2");
+
+    await tx("ASOSentinel.poke() -> restricts on STALE ASO data", D.sentinel, A.sentinel, "poke", [], "success", null, "S2");
+
+    const s2Reason = await getLastReason();
+    const s2Line = await getLine(D.protectedVat);
+    recordCheck("S2", "Sentinel lastReason is ASO_STALE (4)", "reason=4", `reason=${s2Reason}`, Number(s2Reason) === 4);
+    recordCheck("S2", "Protected line == 0 after S2 stale poke", "line=0", `line=${s2Line}`, s2Line === 0n);
+
+    await tx(
+      "Borrow on protected Vat -> reverts with Vat/ceiling-exceeded",
+      D.protectedVat,
+      A.vat,
+      "frob",
+      [ILK, relayerAccount.address, relayerAccount.address, relayerAccount.address, 0n, 1_000n * WAD],
+      "revert",
+      "Vat/ceiling-exceeded",
+      "S2"
+    );
   }
 
-  // ------------------------------------------------------------------ save report
+  // ------------------------------------------------------------------ results table & report
+  title("SCENARIO RESULTS TABLE");
+  console.table(
+    scenariosResults.map((r) => ({
+      Scenario: r.scenario,
+      Label: r.label.slice(0, 42),
+      Expect: r.expect.slice(0, 30),
+      Actual: r.actual.slice(0, 30),
+      Pass: r.pass ? "PASS" : "FAIL",
+    }))
+  );
+
   const reportPath = join(ROOT, "deployments", "11155111-scenarios.json");
   writeFileSync(reportPath, JSON.stringify(scenariosResults, null, 2), "utf8");
-  log(`\n${C.b}${C.g}All testnet scenarios completed!${C.x}`);
   log(`Saved scenario report to ${reportPath}`);
+
+  if (allPassed) {
+    log(`\n${C.b}${C.g}ALL SCENARIOS BEHAVED AS EXPECTED${C.x}`);
+  } else {
+    log(`\n${C.b}${C.r}SOME SCENARIOS FAILED${C.x}`);
+    process.exit(1);
+  }
 }
 
 main().catch((e) => {

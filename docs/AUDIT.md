@@ -105,7 +105,9 @@ All 8 required scenarios run as deterministic Foundry tests **and** as mined tra
 | `npm install viem@2.56.8` | ✔ 0 vulnerabilities |
 | `npm run demo` × 2 | ✔ 22/22 checks each; result tables identical; 12–14 s |
 | `npm run demo -- --step` with piped Enter / early EOF | ✔ |
-| **Not run** | GitHub Actions (no remote yet), Slither/Aderyn (not installed), testnet deployment, third-party review |
+| GitHub Actions CI | ✔ All tests and build green on remote push |
+| Sepolia Testnet Deployment | ✔ 12 contracts deployed, Sourcify exact_match, 27/27 scenario checks passed across two runs ([docs/SEPOLIA.md](SEPOLIA.md)) |
+| **Not run** | Slither/Aderyn (not installed), third-party review |
 
 ## F. Frontend
 
@@ -120,7 +122,7 @@ OSM value and `has`, ASO price, status and nonces, both Vat ceilings and debts, 
 |---|---|---|---|
 | Innovation | Wires signed-attestation checks to Multipli's *actual* Vat ceiling, and exposes a verified OSM staleness gap | The building blocks are well-known (Aave Sentinel, DssAutoLine, RedStone, Multipli's own docs) | Say it plainly: "working implementation of a documented design, applied to the deployed system" |
 | Real-world impact | Reproduces bad-debt minting with Multipli's real code (178k debt vs $150k collateral) | Local chain only; the scenario requires the upstream feed to fail or freeze, which we did not observe on mainnet | Show the 24h adapter window and the OSM `has=true` behavior with mainnet values |
-| Technical execution | 91 tests, invariants, 17/17 mutants killed, 100% branch coverage, byte-verified vendored code | No testnet deploy; no third-party audit | Optional: deploy to a public testnet |
+| Technical execution | 91 tests, invariants, 17/17 mutants killed, 100% branch coverage, 12-contract live Sepolia deploy (verified) | No third-party audit | Deployed & verified on Ethereum Sepolia testnet |
 | Usability | One command, about 10 s, deterministic, exit code; permissionless poke | Terminal only; keeper needed | Optional read-only web panel |
 | Presentation | `docs/DEMO.md` 2:50 talk track, architecture diagram, honest limitations | Dense terminal output | Rehearse with `demo:step`; record a backup video |
 
@@ -128,15 +130,15 @@ OSM value and `has`, ASO price, status and nonces, both Vat ceilings and debts, 
 
 ### 1. Executive verdict: **READY WITH FIXES**
 
-The contracts, tests and on-chain demo are complete, verified and reproducible. The remaining items are
+The contracts, tests, on-chain demo, and Sepolia testnet deployment are complete, verified and reproducible. The remaining items are
 submission logistics:
-- The repository has **no commits and no remote**.
+- The repository is committed and pushed to `origin/feat/sepolia-deploy` with green CI.
 - There is no recorded backup video yet.
 - Nobody else on the team has run it yet on a second machine.
 
 ### 2. Critical blockers
 
-1. The code is not committed or pushed. A lost laptop means a lost project.
+1. Team sync: Ensure all teammates pull the latest `feat/sepolia-deploy` branch with submodules.
 2. The demo has been run on one machine only. A teammate should run it from a clean clone
    (`git clone --recurse-submodules`, Foundry v1.8.3, Node ≥ 20).
 
@@ -180,8 +182,8 @@ See [DEMO.md](DEMO.md).
 
 ### 8. Final submission checklist
 
-- [ ] Code committed and pushed (with submodules)
-- [ ] CI green on GitHub
+- [x] Code committed and pushed (with submodules)
+- [x] CI green on GitHub
 - [x] `forge build` / `forge test` pass (91/91)
 - [x] Deterministic on-chain demo (`npm run demo`, 22/22)
 - [ ] Demo run by a second teammate from a clean clone
