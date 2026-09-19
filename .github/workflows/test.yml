@@ -53,5 +53,56 @@ jobs:
       - run: forge build
       - run: npm ci
         working-directory: demo
+      - name: Contract ABIs used by the demo and dashboard are up to date
+        run: node shared/gen-abis.mjs --check
       - run: npm run demo
         working-directory: demo
+      - name: Origin demo (items 1-16, scenarios A-E, presentation sequence)
+        run: npm run demo:origin
+        working-directory: demo
+
+  app:
+    name: Dashboard (lint, unit tests, build, local deploy smoke test)
+    runs-on: ubuntu-latest
+    needs: check
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.8.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: app
+      - run: npm run lint
+        working-directory: app
+      - run: npm test
+        working-directory: app
+      - run: npm run build
+        working-directory: app
+      - name: Local deploy + bootstrap to FRESH (no dev server)
+        run: npm run local -- --no-serve
+        working-directory: app
+
+  mutation:
+    name: Mutation testing (every mutant must be killed)
+    runs-on: ubuntu-latest
+    needs: check
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.8.3
+      - name: Run mutants (exits non-zero if any survives)
+        run: python3 test/mutation/run_mutations.py

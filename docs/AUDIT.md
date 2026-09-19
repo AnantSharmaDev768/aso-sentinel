@@ -226,3 +226,45 @@ and common pitch phrasings, rewritten:
 4. **+2:30:** rehearse `demo:step` with DEMO.md twice; record a backup video.
 5. **Optional, only if everything above is done:** read-only web panel, then a testnet deploy.
 6. **Freeze:** no contract changes in the last 3 hours before submission, except fixes for failing tests.
+
+## I. Origin layer review (feat/origin)
+
+Scope: `src/risk/WeightedMedian.sol`, `src/risk/CostModel.sol`, `src/risk/ASORiskEngine.sol`,
+`src/OriginSentinel.sol`, `script/OriginDeployer.sol`, `script/DeployOrigin.s.sol`, the shared JS engine and
+the dashboard. The v1 contracts and vendored Multipli files are unchanged (checked with `git diff main`).
+This is again an internal AI-assisted review, **not** a third-party audit. No static analyser (Slither and
+similar) was run.
+
+**Design properties, each checked by tests and invariants**
+
+- The only Vat write is `file(ilk, "line", x)`; `poke()` never changes `spot`
+  (`invariant_PokeNeverChangesSpot`).
+- Restricted states set `line = 0`, and no borrow succeeds while restricted
+  (`invariant_RestrictedStatesHaveZeroLine`, `invariant_NoBorrowWhileRestricted`).
+- Repayments are never blocked (`invariant_RepaymentsNeverBlocked`).
+- There is no escape from DISPUTED/PROTECTIVE except through RECOVERING, which needs a newer accepted round
+  and the delay (`invariant_NoDirectEscapeFromRestriction`).
+- `line ≤ maxLine`, and debt ≤ epoch start debt + growth cap (three invariants).
+- `recordSources` re-verifies every signature against the verifier's EIP-712 digest and signer set; it requires
+  quorum and strictly ascending signers, and accepts one record per round.
+- The deployment fails closed: it starts in PROTECTIVE, a reverting feed raises `FEED_STALE`, and a missing or
+  stale depth value raises `COST_NO_DATA` (WATCH, never FRESH).
+- Setters are owner-only and bounded (weights 1–10,000 bps; depth > 0 and ≤ 1e36; thresholds ordered
+  watch < protect; `watchGapBps` ≤ 100%).
+
+**Issues found and fixed during development**
+
+| Issue | Fix |
+|---|---|
+| The first accepted round was never recorded, so the TWAP had insufficient coverage and the system stuck in WATCH | `poke()` calls `sync()`; the relayer duty is documented; test helpers sync after every round |
+| `AlreadyRecorded(0)` was returned when no round existed (misleading) | new `NoAcceptedRound` error |
+| `CostModel` divided before multiplying (precision loss) | single final division |
+| Invariant campaign could be vacuous (no successful borrows) | `honestRecovery` handler action; runs log borrows and recoveries |
+
+**Mutation testing:** 19 Origin mutants (removing or weakening one check each), in addition to the 17 v1
+mutants. 36/36 are killed.
+
+**Residual risks** are listed in [ORIGIN.md §8](ORIGIN.md#8-known-limitations-origin-specific) and the
+README: TWAP capture by sustained manipulation (bounded, not prevented); governance-supplied depth and weights;
+keeper dependency; no collateral-withdrawal gate; no vault-integrity check (not expressible against the
+Vat's interface).
