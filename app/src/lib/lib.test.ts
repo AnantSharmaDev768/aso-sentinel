@@ -29,7 +29,9 @@ describe('shared engine helpers', () => {
     const f = (1 << 1) | (1 << 8)
     expect(decodeFlags(f).map((x) => x.key)).toEqual(['ASO_DISPUTED', 'COST_HIGH'])
     expect(decodeFlags(0)).toEqual([])
-    expect(FLAGS).toHaveLength(15)
+    // one entry per OriginSentinel.F_* constant (bits 0..16), unique and in order
+    expect(FLAGS.map((x) => x.bit)).toEqual(Array.from({ length: 17 }, (_, i) => i))
+    expect(new Set(FLAGS.map((x) => x.key)).size).toBe(FLAGS.length)
     expect(STATE).toEqual(['FRESH', 'WATCH', 'DISPUTED', 'PROTECTIVE', 'RECOVERING'])
   })
   it('converts USD to wad without float drift', () => {

@@ -92,11 +92,13 @@ export interface OriginReadout {
   verifier: { status: number; price: bigint; lastNonce: bigint; lastAcceptedNonce: bigint; observedAt: bigint; expiresAt: bigint; maxAge: bigint; quorum: bigint };
   risk: {
     depth: bigint; depthAt: bigint; maxDepthAge: number; twapWindow: number; minCoverage: number;
-    weightedNonce: bigint; weightedMedian: bigint; storedObservations: number;
+    weightedNonce: bigint; weightedMedian: bigint; weightedSourceCount: number; storedObservations: number;
     observations: { price: bigint; timestamp: bigint; nonce: bigint }[];
     lossShare: number; elevatedRatio: number; highRatio: number;
   };
   sources: SourceRow[];
+  /** OriginSentinel.policyLine(state) for FRESH, WATCH, DISPUTED, PROTECTIVE, RECOVERING [rad] */
+  policy: bigint[];
   baseline: { Art: bigint; rate: bigint; spot: bigint; line: bigint; dust: bigint; debt: bigint; headroomWad: bigint; costBest: CostQuote; concern: number };
   protectedVat: { Art: bigint; rate: bigint; spot: bigint; line: bigint; dust: bigint; debt: bigint };
   feed: { answer: bigint; updatedAt: bigint };
@@ -112,7 +114,8 @@ export interface Origin {
   records: TxRecord[];
   readAll(): Promise<OriginReadout>;
   readState(): Promise<number>;
-  quote(depthUsd: number, headroomUsd: number, deviationBps: number): Promise<{ quote: CostQuote; concern: number; best: CostQuote; matRay: bigint }>;
+  quote(depthUsd: number, headroomUsd: number, deviationBps: number, matRay?: bigint): Promise<{ quote: CostQuote; concern: number; best: CostQuote; matRay: bigint }>;
+  probe(who: unknown, which: 'baseline' | 'protected', amount: number, sign: 1 | -1): Promise<{ ok: boolean; reason: string | null }>;
   bootstrap(): Promise<void>;
   warp(seconds: bigint | number): Promise<void>;
   poke(opt?: object): Promise<TxRecord>;

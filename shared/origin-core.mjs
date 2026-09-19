@@ -19,7 +19,7 @@ export const FLAGS = [
   { bit: 2, key: "ASO_NO_DATA", level: "protect", label: "No accepted round", explain: "No signed round has been accepted yet." },
   { bit: 3, key: "ASO_STALE", level: "protect", label: "Attestations stale", explain: "The last accepted round is older than maxAge or past its expiry." },
   { bit: 4, key: "FEED_STALE", level: "protect", label: "Multipli feed stale", explain: "Multipli's PriceFeedAdapter reports its Chainlink-style feed as stale (or the call reverted)." },
-  { bit: 5, key: "VAT_ABOVE_EFFECTIVE", level: "protect", label: "Vat price above effective price", explain: "The Vat lends at a price more than the tolerance above min(attested price, TWAP)." },
+  { bit: 5, key: "VAT_ABOVE_EFFECTIVE", level: "protect", label: "Vat lends above the conservative price", explain: "The Vat lends more than 2% above the conservative valuation min(attested price, 6 h TWAP). (In the evaluated, non-default GRADED mode the comparison is with the attested price only.)" },
   { bit: 6, key: "TWAP_DEVIATION_PROTECT", level: "protect", label: "Far from TWAP", explain: "The attested price is beyond the protect threshold away from its time-weighted average." },
   { bit: 7, key: "VELOCITY_PROTECT", level: "protect", label: "Price moving too fast", explain: "Price change per hour between the last two accepted rounds is beyond the protect threshold." },
   { bit: 8, key: "COST_HIGH", level: "protect", label: "Manipulation looks cheap", explain: "Cost gate: estimated manipulation cost is below the estimated extractable value (HIGH CONCERN)." },
@@ -29,6 +29,8 @@ export const FLAGS = [
   { bit: 12, key: "COST_NO_DATA", level: "watch", label: "No depth assumption", explain: "The market-depth assumption is missing or older than its maximum age (INSUFFICIENT DATA)." },
   { bit: 13, key: "TWAP_INSUFFICIENT", level: "watch", label: "Not enough price history", explain: "The recorded history covers less of the TWAP window than required." },
   { bit: 14, key: "SOURCE_DIVERGENCE", level: "watch", label: "Weighted sources diverge", explain: "The weighted median of the recorded sources differs from the plain median beyond the threshold." },
+  { bit: 15, key: "SOURCE_COVERAGE_MIN", level: "watch", label: "Minimum source coverage", explain: "Only the minimum quorum of sources signed the latest recorded round: no redundancy left, one more outage stops new rounds." },
+  { bit: 16, key: "VAT_ABOVE_TWAP", level: "watch", label: "Vat lends above the 6 h average", explain: "Only in the evaluated, non-default GRADED mode: the Vat lends more than the TWAP watch band above the 6 h TWAP, so borrowing is limited rather than frozen." },
 ];
 
 export function decodeFlags(flags) {
@@ -127,6 +129,18 @@ export function createOrigin({ publicClient, testClient, walletFor, deployment: 
 
   const read = (address, abi, functionName, args = [], account) =>
     publicClient.readContract({ address, abi, functionName, args, account });
+
+  /** Would this borrow (sign > 0) or repay (sign < 0) succeed right now? eth_call only: nothing is mined. */
+  async function probe(who, which, amount, sign) {
+    const vat = which === "baseline" ? D.baselineVat : D.protectedVat;
+    const wad = usdToWad(amount);
+    try {
+      await publicClient.simulateContract({ account: who, address: vat, abi: A.vat, functionName: "frob", args: [ILK, who.address, who.address, who.address, 0n, sign > 0 ? wad : -wad] });
+      return { ok: true, reason: null };
+    } catch (e) {
+      return { ok: false, reason: decodeError(e) };
+    }
+  }
 
   async function now() {
     return (await publicClient.getBlock()).timestamp;
@@ -262,6 +276,10 @@ export function createOrigin({ publicClient, testClient, walletFor, deployment: 
       read(D.riskEngine, A.riskEngine, "elevatedRatioBps"),
       read(D.riskEngine, A.riskEngine, "highRatioBps"),
     ]);
+    const [policy, coverage] = await Promise.all([
+      Promise.all([0, 1, 2, 3, 4].map((st) => read(D.sentinel, A.sentinel, "policyLine", [st]))),
+      read(D.riskEngine, A.riskEngine, "weightedSourceCount"),
+    ]);
     const nObs = Number(stored);
     const observations = await Promise.all(
       Array.from({ length: Math.min(nObs, 12) }, (_, i) => read(D.riskEngine, A.riskEngine, "observation", [BigInt(i)])),
@@ -300,7 +318,8 @@ export function createOrigin({ publicClient, testClient, walletFor, deployment: 
       thresholds: thr,
       epochConfig: epoch,
       verifier: { status: Number(vStatus), price: vPrice, lastNonce: vLastNonce, lastAcceptedNonce: vAccepted, observedAt, expiresAt, maxAge, quorum },
-      risk: { depth, depthAt, maxDepthAge, twapWindow, minCoverage, weightedNonce: wNonce, weightedMedian: wPrice, storedObservations: nObs, observations, lossShare, elevatedRatio, highRatio },
+      risk: { depth, depthAt, maxDepthAge, twapWindow, minCoverage, weightedNonce: wNonce, weightedMedian: wPrice, weightedSourceCount: Number(coverage), storedObservations: nObs, observations, lossShare, elevatedRatio, highRatio },
+      policy,
       sources,
       baseline: { Art: bIlk[0], rate: bIlk[1], spot: bIlk[2], line: bIlk[3], dust: bIlk[4], debt: bIlk[0] * bIlk[1], headroomWad: bHeadroomWad, costBest: baselineQuote[2], concern: Number(baselineQuote[1]) },
       protectedVat: { Art: pIlk[0], rate: pIlk[1], spot: pIlk[2], line: pIlk[3], dust: pIlk[4], debt: pIlk[0] * pIlk[1] },
@@ -313,8 +332,8 @@ export function createOrigin({ publicClient, testClient, walletFor, deployment: 
     };
   }
 
-  async function quote(depthUsd, headroomUsd, deviationBps) {
-    const mat = (await read(D.protectedSpotter, A.spot, "ilks", [ILK]))[1];
+  async function quote(depthUsd, headroomUsd, deviationBps, matRay) {
+    const mat = matRay ?? (await read(D.protectedSpotter, A.spot, "ilks", [ILK]))[1];
     const [q, concern, best] = await read(D.riskEngine, A.riskEngine, "quote", [usdToWad(depthUsd), usdToWad(headroomUsd), mat, BigInt(deviationBps)]);
     return { quote: q, concern: Number(concern), best, matRay: mat };
   }
@@ -350,7 +369,7 @@ export function createOrigin({ publicClient, testClient, walletFor, deployment: 
   return {
     D, A, ACC, records,
     tx, check, read, now, warp, nextNonce, signRound, submitRound, poke, setFeed, osmHop,
-    deposit, borrow, repay, setDepth, readAll, readSnapshot, readState, quote, bootstrap, freshAt, decodeError, assertLocal,
+    deposit, borrow, repay, probe, setDepth, readAll, readSnapshot, readState, quote, bootstrap, freshAt, decodeError, assertLocal,
   };
 }
 
@@ -560,5 +579,20 @@ export const PRESENTATION = [
       throw new Error("signals did not clear within 10 hours");
     },
   },
-  { title: "7. Recovery", say: "After the recovery delay and a newer round, borrowing reopens. While the 6 h TWAP still remembers the pump the Sentinel sits in WATCH with reduced headroom; it returns to FRESH once the window rolls past it.", run: async (o) => { await o.warp(HOUR); await o.freshAt(2500); await o.poke({ label: "poke() → open again" }); await o.borrow(o.ACC.bob, "Bob", "protected", 1_000); } },
+  {
+    title: "7. Recovery",
+    say: "After the recovery delay and a newer round, borrowing reopens — first in WATCH (limited) while the 6 h TWAP still remembers the pump, then FRESH once the window rolls past it.",
+    run: async (o) => {
+      await o.warp(HOUR);
+      await o.freshAt(2500);
+      await o.poke({ label: "poke() → borrowing reopens (limited while the TWAP remembers the pump)" });
+      await o.borrow(o.ACC.bob, "Bob", "protected", 1_000);
+      for (let i = 0; i < 8 && (await o.readState()) !== 0; i++) {
+        await o.warp(HOUR);
+        await o.freshAt(2500);
+        await o.poke({ label: "poke() (hourly honest round)" });
+      }
+      if ((await o.readState()) !== 0) throw new Error("did not return to FRESH within 8 hours of honest rounds");
+    },
+  },
 ];

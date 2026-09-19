@@ -60,8 +60,9 @@ extractable(d) = H × max(0, 1 − mat / (1 + d))  bad debt the headroom allows 
 ratio(d)       = cost(d) / extractable(d)
 ```
 
-The gate evaluates `d₀ = mat − 1` (the minimum profitable inflation) plus 5, 15, 30 and 60 percentage
-points, and uses the **lowest** ratio:
+With `d₀ = mat − 1` (the minimum profitable inflation, 40% at mat 140%), the gate evaluates d₀ + 5, 15, 30 and
+60 percentage points (45%, 55%, 70%, 100%) — d₀ itself is not evaluated because nothing is extractable there —
+and uses the **lowest** ratio:
 
 | Concern | Condition | Sentinel effect |
 |---|---|---|
@@ -69,6 +70,9 @@ points, and uses the **lowest** ratio:
 | ELEVATED | 1× ≤ ratio < 3× | WATCH |
 | HIGH | ratio < 1× | PROTECTIVE |
 | INSUFFICIENT_DATA | depth unset or older than `maxDepthAge` (7 days) | WATCH |
+
+Implementation note: the current implementation applies the price-move factor d to the assumed unwind loss
+(`cost = capital × d × lossShare`). This release preserves the tested implementation.
 
 Assumptions and limits:
 
@@ -84,12 +88,14 @@ Assumptions and limits:
 | `ASO_HALTED`, `ASO_NO_DATA`, `ASO_STALE` | verifier status | PROTECT |
 | `ASO_DISPUTED` | verifier status DISPUTED | → DISPUTED |
 | `FEED_STALE` | Multipli `PriceFeedAdapter.peek()` returns `has=false` or reverts | PROTECT |
-| `VAT_ABOVE_EFFECTIVE` | Vat price > effective price × (1 + 2%) | PROTECT |
+| `VAT_ABOVE_EFFECTIVE` | Vat price > min(attested, TWAP) × (1 + 2%) — the explicit conservative-valuation rule (default `vatCheck = CONSERVATIVE`; see §10) | PROTECT |
 | `TWAP_DEVIATION_PROTECT` / `_WATCH` | spot deviation ≥ 15% / ≥ 3% | PROTECT / WATCH |
 | `VELOCITY_PROTECT` / `_WATCH` | velocity ≥ 20%/h / ≥ 5%/h | PROTECT / WATCH |
 | `COST_HIGH` / `COST_ELEVATED` / `COST_NO_DATA` | cost gate (section 3) | PROTECT / WATCH / WATCH |
 | `TWAP_INSUFFICIENT` | TWAP coverage below 50% | WATCH |
 | `SOURCE_DIVERGENCE` | weighted median differs from the verifier's median by ≥ 0.5% (only when `recordSources` covered the latest round) | WATCH |
+| `SOURCE_COVERAGE_MIN` | the latest round's per-source record holds only the minimum quorum of sources (e.g. 3 of 5): no redundancy left | WATCH |
+| `VAT_ABOVE_TWAP` | only in the evaluated, non-default `GRADED` mode: Vat price > TWAP × (1 + 3% watch band) | WATCH |
 
 Target mapping: `ASO_DISPUTED` → DISPUTED; else any PROTECT flag → PROTECTIVE; else any WATCH flag → WATCH;
 else FRESH. Market signals are skipped until the first accepted round exists.
@@ -118,6 +124,12 @@ else FRESH. Market signals are skipped until the first accepted round exists.
 | FRESH | `min(debt + gap, maxLine, epochStartDebt + growthCap)` |
 | WATCH | the same, with `gap × watchGapBps` (25%) in place of `gap` |
 | DISPUTED / PROTECTIVE / RECOVERING | `0` |
+
+The policy is machine-readable: `OriginSentinel.policyLine(state)` returns the ceiling the Sentinel would set in
+each state right now, from the same function `poke()` applies. `test/OriginPolicy.t.sol` proves each row: FRESH
+permits normal borrowing, WATCH strictly reduces headroom but still allows borrowing, DISPUTED/PROTECTIVE freeze,
+RECOVERING stays frozen until a newer round and the delay (and re-restricts on relapse), repayments succeed in every
+restricted state, and no restricted state can raise capacity (fuzzed over existing debt).
 
 Defaults: `gap` 200,000 rwaUSD; `maxLine` 1,000,000; `growthCap` 100,000 rwaUSD per 1-day epoch. Epochs are
 aligned to whole multiples of the duration from deployment, and `epochStartDebt` is taken at the first poke of
@@ -165,9 +177,27 @@ on-chain depends on them.
 
 ## 9. Evidence
 
-- `forge test`: suites `RiskLibraries` (18), `ASORiskEngine` (22), `OriginSentinel` (25), `OriginScenarios`
-  (5), plus the `OriginInvariants` suite. That suite is one invariant test that checks 8 properties over
-  random call sequences, including a handler that performs honest recovery so borrowing is actually exercised.
-- `test/mutation/run_mutations.py`: 19 Origin mutants, out of 36 in total.
+- `forge test`: suites `RiskLibraries` (18), `ASORiskEngine` (22), `OriginSentinel` (25), `OriginPolicy` (21),
+  `OriginScenarios` (5), plus the `OriginInvariants` suite. That suite is one invariant test that checks 8
+  properties over random call sequences, including a handler that performs honest recovery so borrowing is
+  actually exercised.
+- `test/mutation/run_mutations.py`: 23 Origin mutants, out of 40 in total.
+- `cd demo && npm run validate`: the labelled validation suite (38 main + 19 holdout cases) with TP/FN/TN/FP,
+  latency, invariant and transition checks — see [VALIDATION.md](VALIDATION.md).
 - `npm run demo:origin` (in `demo/`) runs every item on a fresh anvil chain as mined transactions and exits
   non-zero on any unexpected outcome.
+
+## 10. The Vat price rule (`vatCheck`) and why it was not changed
+
+`VAT_ABOVE_EFFECTIVE` compares the Vat's lending price with min(attested, 6 h TWAP): *the Vat must not lend more than
+2% above the conservative valuation*. Validation showed it is the main source of restrictions in honest trending
+markets, so an alternative (`GRADED`: freeze only on Vat vs current market + 2%, and WATCH on Vat vs TWAP beyond the
+3% band) was implemented behind `setVatCheck` and evaluated on the main and a separate holdout suite. It changed no
+TP/FN/TN/FP count, removed about two frozen hours per honest rally, and removed the same two frozen hours during
+sustained manipulations. Under a bounded-loss priority that is not an improvement, so the default stays
+`CONSERVATIVE`. `GRADED` is kept only so the comparison is reproducible (`npm run validate -- --rules=candidate-graded`).
+Details and per-case analysis: [VALIDATION.md §2 and §7](VALIDATION.md).
+
+A further finding from that analysis: most remaining false positives come from the fixed 2% tolerance against
+Multipli's OSM, whose queued price lags the market by up to 2 hours (e.g. an honest −1%/h decline is frozen). A
+graded overvaluation response is recorded as future work; it was deliberately not tuned against the test suite.

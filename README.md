@@ -26,27 +26,30 @@ reliability, accuracy and resilience.
 6. [Smart contract architecture](#6-smart-contract-architecture)
 7. [Risk Engine](#7-risk-engine)
 8. [Manipulation-cost model](#8-manipulation-cost-model)
-9. [Sentinel state machine](#9-sentinel-state-machine)
+9. [Sentinel state machine — five states, five different actions](#9-sentinel-state-machine--five-states-five-different-actions)
 10. [Borrowing growth cap](#10-borrowing-growth-cap)
 11. [Baseline versus protected](#11-baseline-versus-protected)
-12. [Installation](#12-installation)
-13. [Local development (dashboard)](#13-local-development-dashboard)
-14. [Tests](#14-tests)
-15. [Demo](#15-demo)
-16. [Deployment](#16-deployment)
-17. [Contract addresses (verified)](#17-contract-addresses-verified)
-18. [Transaction evidence](#18-transaction-evidence)
-19. [Security assumptions](#19-security-assumptions)
-20. [Known limitations](#20-known-limitations)
-21. [Future improvements](#21-future-improvements)
-22. [Judge presentation flow](#22-judge-presentation-flow)
+12. [Validation: false positives and false negatives](#12-validation-false-positives-and-false-negatives)
+13. [Historical validation](#13-historical-validation)
+14. [Known detection boundaries](#14-known-detection-boundaries)
+15. [Installation](#15-installation)
+16. [Local development (dashboard)](#16-local-development-dashboard)
+17. [Tests](#17-tests)
+18. [Demo](#18-demo)
+19. [Deployment](#19-deployment)
+20. [Contract addresses (verified)](#20-contract-addresses-verified)
+21. [Transaction evidence](#21-transaction-evidence)
+22. [Security assumptions](#22-security-assumptions)
+23. [Known limitations](#23-known-limitations)
+24. [Future improvements](#24-future-improvements)
+25. [Judge presentation flow](#25-judge-presentation-flow)
 
 **Status at a glance**
 
 | | What |
 |---|---|
 | **Implemented** | `ASOVerifier`, `ASOSentinel` (v1); `ASORiskEngine`, `WeightedMedian`, `CostModel`, `OriginSentinel` (Origin); deploy scripts; CLI demos; dashboard |
-| **Tested** | 162 Foundry tests (unit, fuzz, invariant); 36 mutants all killed; on-chain demos with 22/22 (v1) and 144/144 (Origin) expected outcomes; 9 dashboard unit tests |
+| **Tested** | 183 Foundry tests (unit, fuzz, invariant) incl. 21 state/action-policy tests; 40 mutants all killed; validation suite of 38 + 19 holdout labelled cases with measured TP/FN/TN/FP ([docs/VALIDATION.md](docs/VALIDATION.md)); on-chain demos with 22/22 (v1) and 152/152 (Origin) expected outcomes; 9 dashboard unit tests |
 | **Simulated** | price sources (anvil or team keys), the Chainlink-style feed, the collateral token, time (anvil time travel), the keeper, market depth (a governance input), and attacker behaviour in scenarios |
 | **Planned (not done)** | Multipli integration (`vat.rely`), real independent sources, measured liquidity, keeper incentives, vault-integrity checks, timelock/multisig ownership, an external audit, an Origin Sepolia deployment |
 
@@ -181,31 +184,52 @@ round) and derives:
 
 ## 8. Manipulation-cost model
 
-A transparent proxy, with every input visible in the dashboard's Cost Lab:
+A transparent proxy computed on-chain by [`CostModel.sol`](src/risk/CostModel.sol); every input is visible and
+adjustable in the dashboard's Cost Lab.
+
+| Variable | Meaning |
+|---|---|
+| `d` | how much the attacker tries to inflate the price (fraction) |
+| `D` | market-depth **assumption**: USD needed to move the price by 1% — set by governance, not measured |
+| `H` | new debt the attacker could take right now = the Sentinel's FRESH headroom |
+| `lossShare` | assumed share of (capital × move) lost unwinding the position (50%) |
+| `mat` | liquidation ratio (140%) |
 
 ```
-capital(d)     = depth × d/1%              depth = governance ASSUMPTION ($ to move the price 1%)
-cost(d)        = capital(d) × d × 50%      assumed unwind loss
-extractable(d) = H × max(0, 1 − 1.4/(1+d)) H = headroom the FRESH state would open now
-ratio          = min over d ∈ {40%, 45%, 55%, 70%, 100%} of cost/extractable
+capital(d)     = D × (d in %)                   capital needed to move the price
+cost(d)        = capital(d) × d × lossShare     modelled attack cost (note the factor d)
+extractable(d) = H × max(0, 1 − mat/(1 + d))    debt taken beyond the TRUE value of the posted collateral
+ratio          = min over d ∈ {45%, 55%, 70%, 100%} of cost/extractable   (d0 + 5, 15, 30, 60 points; d0 = mat − 1 = 40%)
 LOW ≥ 3× · ELEVATED 1–3× (→ WATCH) · HIGH < 1× (→ PROTECTIVE) · INSUFFICIENT_DATA if depth missing/stale (→ WATCH)
 ```
 
-This is **a rough estimate, not an attack cost**. It ignores funding, flash liquidity and cross-venue
-effects. Its purpose is to make the economics explicit and to shrink headroom when manipulation looks cheap.
+*Implementation note:* the current implementation applies the price-move factor d to the assumed unwind loss (`cost = capital × d × lossShare`). This release preserves the tested implementation.
 
-## 9. Sentinel state machine
+**This is a simplified economic proxy.** It does not model order books, multiple venues, flash loans, MEV,
+cross-venue arbitrage, attacker coordination, liquidation cascades or non-linear slippage, and it has no real
+liquidity data. Correct reading: *under the stated assumptions, the modelled attack cost exceeds the modelled
+extractable value* — never "the attack is impossible". A sensitivity analysis (three depth assumptions × six
+inflation levels, every point from the deployed `quote()`) is in [docs/VALIDATION.md §10](docs/VALIDATION.md) and live
+in the Cost Lab.
 
-| State | Entered when | New borrowing (`line`) |
-|---|---|---|
-| FRESH | no signal | `min(debt + gap, maxLine, epoch cap)` |
-| WATCH | a warning signal (TWAP ≥ 3%, velocity ≥ 5%/h, cost ELEVATED or no data, TWAP history insufficient, source divergence) | the same with 25% of `gap` |
-| DISPUTED | verifier round DISPUTED | 0 |
-| PROTECTIVE | stale, halted or missing data; stale Multipli feed; Vat above effective price by > 2%; TWAP ≥ 15%; velocity ≥ 20%/h; cost HIGH | 0 |
-| RECOVERING | signals clear after DISPUTED/PROTECTIVE | 0 until a **newer accepted round** and **1 h** have passed |
+## 9. Sentinel state machine — five states, five different actions
 
-There is no direct PROTECTIVE → FRESH transition. Every transition happens on a permissionless `poke()` and
-emits `StateChanged`. The contract is deployed PROTECTIVE (fail closed). Repayments work in every state.
+The market needs more than accept/reject: each state maps to a different, **enforced** debt ceiling.
+`OriginSentinel.policyLine(state)` returns that ceiling from the same code `poke()` applies, and
+[`test/OriginPolicy.t.sol`](test/OriginPolicy.t.sol) proves every row.
+
+| State | Meaning | Trigger | Borrowing action | Debt ceiling | Repayment | Recovery |
+|---|---|---|---|---|---|---|
+| **FRESH** | healthy | no flag | normal | `min(debt + gap, maxLine, epoch cap)` | ✓ | — |
+| **WATCH** | real warning, not enough to freeze | TWAP ≥ 3%, velocity ≥ 5%/h, cost ELEVATED or no depth data, thin TWAP history, source divergence, only the minimum quorum of sources online | **limited** (25% of the normal gap) | `min(debt + 0.25·gap, maxLine, epoch cap)` | ✓ | automatic when the warning clears |
+| **DISPUTED** | no trustworthy price | latest round's sources spread > 1% | **frozen** | `0` | ✓ | → RECOVERING after an agreeing round |
+| **PROTECTIVE** | data may be valid, lending more is dangerous | stale/missing/halted data, Multipli feed stale, Vat lending > 2% above min(market, 6 h TWAP), TWAP ≥ 15%, velocity ≥ 20%/h, cost HIGH | **frozen** | `0` | ✓ | → RECOVERING when every signal clears |
+| **RECOVERING** | danger cleared, stability unproven | signals cleared after DISPUTED/PROTECTIVE | **still frozen** | `0` | ✓ | newer accepted round **and** 1 h delay; a relapse sends it straight back |
+
+There is no direct PROTECTIVE → FRESH transition; RECOVERING exists so that *attack → brief normalisation → borrowing
+reopens → attack resumes* cannot happen (tested: `test_Recovering_KeepsFreeze_UntilNewRoundAndDelay_AndReRestrictsOnRelapse`,
+validation case R2). Every transition happens on a permissionless `poke()` and emits `StateChanged`. The contract is
+deployed PROTECTIVE (fail closed).
 
 ## 10. Borrowing growth cap
 
@@ -226,7 +250,67 @@ on-chain demo.
 | D. Feed frozen while the market falls 40% | lends at the old price; **28,000 bad debt** at $1,500 | PROTECTIVE (Vat above effective price) |
 | E. Sources disagree | n/a | DISPUTED → repay works → RECOVERING → FRESH only after a newer round |
 
-## 12. Installation
+## 12. Validation: false positives and false negatives
+
+`cd demo && npm run validate` runs a labelled suite against the real contracts on a fresh local chain and computes the
+metrics from what the Sentinel actually did. Ground truth (risk / healthy / degraded) is fixed per case before running;
+after every `poke()` the harness records state, flags and ceiling and probes (`eth_call`) whether a borrow and a
+repayment would succeed. Full report, per-case tables and analysis: **[docs/VALIDATION.md](docs/VALIDATION.md)**.
+
+| Result set | N (risk / healthy / degraded) | TP | FN | TN | FP | Recall | Precision | FP rate |
+|---|---|---|---|---|---|---|---|---|
+| Final rules — main suite | 38 (29 / 8 / 1) | 27 | 2 | 4 | 4 | 93.1% | 87.1% | 50.0% |
+| Final rules — holdout suite (written before any rule change) | 19 (11 / 7 / 1) | 10 | 1 | 2 | 5 | 90.9% | 66.7% | 71.4% |
+
+- **Coverage:** healthy and volatile markets, thin-market pumps, sustained and creeping manipulation, sub-threshold
+  manipulation, stale and frozen feeds, conflicting sources, forged / unauthorised / replayed / expired / duplicated /
+  sub-quorum rounds, **source availability 5/5 → 0/5**, **1–4 of 5 sources lying** (all signatures relayed →
+  DISPUTED) and **3–5 of 5 colluding with only their valid signatures relayed** (verifier accepts; the risk engine
+  freezes), recovery and relapse. Invariants were checked at every poke (0 violations) and every state transition was
+  checked against the transition rules (0 violations).
+- **False negatives:** A4 / X11 — a manipulation held longer than the 6 h TWAP window (protected for 6 of 8–10 hours,
+  then borrowing reopens; bounded by the daily growth cap); A6 — a +2.5% manipulation below every threshold (and
+  unprofitable at a 140% liquidation ratio).
+- **False positives:** honest trends, spikes and declines. Most come from the fixed 2% Vat-price tolerance against
+  Multipli's OSM, whose queued price lags the market by up to 2 hours.
+- **A rule change was evaluated and rejected:** an alternative Vat rule (`GRADED`) was proposed from design reasoning,
+  evaluated on both suites and rejected — it changed no TP/FN/TN/FP count and traded two frozen hours in honest rallies
+  for two frozen hours in sustained attacks. Baseline, candidate and final results are all preserved in `validation/`;
+  the final rules equal the baseline rules.
+- **Read these as behaviour on a synthetic, team-built suite — not real-world detection rates.**
+
+## 13. Historical validation
+
+Six documented incidents, each with sources, kept in four separate layers: **historical fact** (only what the sources
+state), **retrospective mapping** (our interpretation), **reproduced test** (the pattern with synthetic prices) and
+**not modeled**. No historical data is replayed and no claim is made that Origin would have prevented any of them.
+
+| Incident | Pattern | Reproduced as |
+|---|---|---|
+| Synthetix sKRW oracle, Jun 2019 ([Synthetix](https://blog.synthetix.io/response-to-oracle-incident/)) | faulty source, too few sources | S2, M1, F3 |
+| bZx, Feb 2020 ([Qin et al., FC 2021](https://arxiv.org/abs/2003.03810)) | in-transaction DEX price manipulation | A2 (flash-loan atomicity not modeled) |
+| Compound DAI liquidations, Nov 2020 ([Compound forum](https://www.comp.xyz/t/dai-liquidation-event/642)) | single-venue price spike | A2 (liquidations out of scope) |
+| Inverse Finance, Apr 2022 ([CertiK](https://www.certik.com/resources/blog/inverse-finance-02-april-2022)) | thin-liquidity pool + TWAP oracle | A1, A3, A4 |
+| Venus LUNA, May 2022 ([The Record](https://therecord.media/collapse-of-luna-cryptocurrency-leads-to-11-million-exploit-on-venus-protocol)) | upstream feed stopped while the market fell | F1, F2 |
+| Mango Markets, Oct 2022 ([CFTC](https://www.cftc.gov/PressRoom/PressReleases/8647-23), [SEC](https://www.sec.gov/newsroom/press-releases/2023-13)) | thin-market pump reported honestly by the oracle | A1, V5 |
+
+Facts, mappings and limits for each: [docs/VALIDATION.md §11](docs/VALIDATION.md) and the dashboard's Validation page.
+
+## 14. Known detection boundaries
+
+What Origin does **not** claim to protect against — limits of scope, not failures of the concept (the goal is bounded
+loss, not guaranteed safety):
+
+1. **Long-duration manipulation can enter the TWAP window** (A4, X11). The daily growth cap and WATCH headroom bound
+   borrowing; they do not detect it.
+2. **Small manipulation can stay below thresholds** (A6).
+3. **Manipulation-cost results depend on the market-depth assumption.**
+4. **A compromised source majority passes the verifier**; only the economic signals can object, and only for large or
+   fast moves (V3–V5).
+5. **Demo oracle sources are controlled test keys**, not independent providers.
+6. **Prototype, not an audited production deployment**; liquidations and collateral withdrawal are out of scope.
+
+## 15. Installation
 
 Requires [Foundry](https://book.getfoundry.sh/) v1.8.3 and Node ≥ 20.
 
@@ -238,7 +322,7 @@ forge build
 (cd app && npm ci)
 ```
 
-## 13. Local development (dashboard)
+## 16. Local development (dashboard)
 
 ```bash
 cd app
@@ -253,17 +337,18 @@ healthy FRESH state with real transactions, takes a chain snapshot, and serves t
   chain id 31337. The dashboard refuses other networks, and it shows loading, no-deployment, no-chain and
   wrong-network states.
 - **Reset chain** rewinds to the healthy snapshot, so every scenario is reproducible.
-- Views: Overview, Oracle monitoring, Sentinel state, Baseline vs protected, Manipulation Cost Lab, Scenarios &
-  log, Evidence, Presentation mode.
+- Views: Overview, Oracle Monitoring, Sentinel State, Baseline vs Protected, Manipulation Cost Lab, Scenarios &
+  Log, **Validation**, Evidence, Presentation Mode.
 - Values from contracts are labelled as such. Browser-side analytics (weakest link, bad-debt estimate) are
   labelled as estimates. The Evidence view separates LOCAL, SEPOLIA (committed files) and SIMULATED data.
 
-## 14. Tests
+## 17. Tests
 
 ```bash
-forge test                               # 162 tests: unit, fuzz, invariant
+forge test                               # 183 tests: unit, fuzz, invariant
 forge fmt --check
-python test/mutation/run_mutations.py    # 36 mutants, each must be killed
+python test/mutation/run_mutations.py    # 40 mutants, each must be killed
+cd demo && npm run validate               # labelled validation suite -> validation/, docs/VALIDATION.md
 node shared/gen-abis.mjs --check         # ABIs used by demo/dashboard match the build
 cd app && npm run lint && npm test && npm run build
 ```
@@ -274,26 +359,28 @@ cd app && npm run lint && npm test && npm run build
 | RiskLibraries (WeightedMedian + CostModel) | 10 + 8 |
 | ASORiskEngine | 22 |
 | OriginSentinel | 25 |
+| OriginPolicy (state/action matrix, source availability, coordinated manipulation, Vat rule modes) | 21 |
 | OriginScenarios (A–E) | 5 |
 | OriginInvariants: one invariant test checking 8 properties (128 runs × 64 calls) | 1 |
 
 CI ([.github/workflows/test.yml](.github/workflows/test.yml)) runs all of the above, including mutation testing,
 plus both demos and a headless local deploy.
 
-## 15. Demo
+## 18. Demo
 
 ```bash
 cd demo
 npm run demo          # v1: 22 expected-vs-actual checks (~15 s)
 npm run demo:step     # v1, paused between scenarios for live narration
-npm run demo:origin   # Origin: items 1–16, scenarios A–E, presentation sequence (~30 s)
+npm run demo:origin   # Origin: items 1–16, scenarios A–E, presentation sequence — 152 checks (~30 s)
+npm run validate      # validation suite, final rules, main + holdout (~2 min); -- --rules=baseline for the original
 ```
 
 Each demo starts its own anvil, deploys, and runs every step as **mined transactions**, including expected
 reverts, whose decoded reasons are printed. It ends with an expected-vs-actual summary and **exits non-zero**
 on any unexpected outcome. Talk track: [docs/DEMO.md](docs/DEMO.md).
 
-## 16. Deployment
+## 19. Deployment
 
 - **Local (Origin):** `forge script script/DeployOrigin.s.sol --rpc-url http://127.0.0.1:8545 --broadcast`.
   It refuses any chain except 31337 because it uses public test keys. `npm run local` does this for you.
@@ -302,7 +389,7 @@ on any unexpected outcome. Talk track: [docs/DEMO.md](docs/DEMO.md).
 - **Origin on Sepolia: not deployed.** It would need a dedicated script with non-test keys, shortened timings
   and a relayer that calls `sync()`. We did not redeploy, so as not to disturb the verified v1 evidence.
 
-## 17. Contract addresses (verified)
+## 20. Contract addresses (verified)
 
 Ethereum Sepolia (chain `11155111`), **v1 core only**. All 12 contracts are source-verified on Sourcify (exact
 match). The full list is in [docs/SEPOLIA.md](docs/SEPOLIA.md).
@@ -313,7 +400,7 @@ match). The full list is in [docs/SEPOLIA.md](docs/SEPOLIA.md).
 Blockscout shows the verified source. Etherscan shows the transactions but not the source. `ASORiskEngine`
 and `OriginSentinel` have **no public address**; local addresses are disposable.
 
-## 18. Transaction evidence
+## 21. Transaction evidence
 
 - **Sepolia:** the runner (`npm run demo:sepolia`) passed **27/27 checks in each of two runs**. Every linked
   transaction was checked against the chain. Evidence: addresses in
@@ -325,7 +412,7 @@ and `OriginSentinel` have **no public address**; local addresses are disposable.
 - **Local:** every demo and dashboard action shows its tx hash, block and decoded revert reason. These are
   local anvil transactions and are labelled as such.
 
-## 19. Security assumptions
+## 22. Security assumptions
 
 1. A majority of source keys (3 of 5) is honest and independent. In the demo they are team-controlled keys.
 2. Someone calls `poke()` (and `sync()`) regularly. There is no keeper incentive yet.
@@ -335,7 +422,9 @@ and `OriginSentinel` have **no public address**; local addresses are disposable.
 5. Multipli governance would have to `rely` the Sentinel on the Vat. Its only privilege is setting `line`, and
    never above `maxLine`.
 
-## 20. Known limitations
+## 23. Known limitations
+
+See also [Known detection boundaries](#14-known-detection-boundaries).
 
 1. **Sustained manipulation becomes the TWAP.** Origin bounds the loss (WATCH headroom, epoch cap); it does
    not detect this indefinitely.
@@ -350,14 +439,14 @@ and `OriginSentinel` have **no public address**; local addresses are disposable.
 7. **The relayer chooses among valid signatures.** Its influence is bounded by the 1% agreement band.
 8. **Not audited. Origin is local only. Not integrated with Multipli.**
 
-## 21. Future improvements
+## 24. Future improvements
 
 - On-chain or attested liquidity depth instead of a governance number, and measured source-quality weights.
 - Keeper incentives, and automatic `sync()` inside the verifier's round submission.
 - A Vat-level hook to gate collateral withdrawals, and vault-integrity checks where interfaces allow.
 - A timelock/multisig for admin roles, an Origin Sepolia deployment with a relayer, and an external audit.
 
-## 22. Judge presentation flow
+## 25. Judge presentation flow
 
 Run `cd app && npm run local`, open **Presentation mode**, and click through (about 3 minutes). Each step sends
 real local transactions:
@@ -368,10 +457,12 @@ real local transactions:
 4. **Protective:** a +60% pump that every source reports → PROTECTIVE; Bob's borrow reverts.
 5. **Repayment:** Alice repays while restricted, which succeeds.
 6. **Fresh round:** hourly honest rounds until the signals clear → RECOVERING (never straight to FRESH).
-7. **Recovery:** a newer round plus the delay reopens borrowing, in WATCH while the TWAP still remembers the pump.
+7. **Recovery:** a newer round plus the delay reopens borrowing — limited (WATCH) while the TWAP still remembers the
+   pump, then FRESH once the 6 h window rolls past it.
 
-Then show **Baseline vs protected** (same OSM price, different outcome), the **Cost Lab** formulas, and the
-**Evidence** view (the verified Sepolia v1 contracts). **Reset chain** returns to step 1.
+Then show **Validation** (measured TP/FN/TN/FP, the rejected rule change, every miss explained), **Baseline vs
+protected** (same OSM price, different outcome), the **Cost Lab** formulas, and the **Evidence** view (the verified
+Sepolia v1 contracts). **Reset chain** returns to step 1.
 
 ## Prior art
 

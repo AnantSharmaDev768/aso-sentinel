@@ -177,3 +177,10 @@ Both runs completed with **`ALL SCENARIOS BEHAVED AS EXPECTED`** (27 / 27 checks
 | 25 | `S6` | Sentinel restricted == true after S6 poke | `restricted=true` | `restricted=true` | ✅ PASS | *(State assertion)* |
 | 26 | `S6` | Baseline Vat still allows borrow at stale price (Bad Debt) | `success` | `success` | ✅ PASS | [`0x01c12647...`](https://sepolia.etherscan.io/tx/0x01c12647638d44ea3e4615f5bf71d2b2ca81bd7751293b705a6c6bad352c5c6f) |
 | 27 | `S6` | Protected Vat frob -> reverts with Vat/ceiling-exceeded | `revert contains 'Vat/ceiling-exceeded'` | `reverted: Error(Vat/ceiling-exce` | ✅ PASS | [`0xe31d6653...`](https://sepolia.etherscan.io/tx/0xe31d6653781e5e0c0d55effe7b1d36b975fd386e7aa8320f36cf3504b1ebc418) |
+
+## Re-check (2026-09-19)
+
+Read-only re-verification against a public Sepolia RPC: all 12 contract addresses in `deployments/11155111.json` have
+deployed code (the 13th address, the relayer, is a wallet and correctly has none), and all 17 transaction hashes linked
+from Run 2 return receipts. No redeployment was made. Two historical-source links (Medium post-mortems) return HTTP 403
+to automated checks; they are secondary sources and were not re-verified automatically.

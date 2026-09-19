@@ -7,7 +7,8 @@
     "demo": "node run-demo.mjs",
     "demo:step": "node run-demo.mjs --step",
     "demo:sepolia": "node run-sepolia.mjs",
-    "demo:origin": "node run-origin.mjs"
+    "demo:origin": "node run-origin.mjs",
+    "validate": "node run-validation.mjs"
   },
   "engines": {
     "node": ">=20"

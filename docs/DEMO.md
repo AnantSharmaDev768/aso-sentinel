@@ -37,3 +37,24 @@ and narration are listed in the README, section 22.
 
 **Fallback:** `cd demo && npm run demo:origin` runs the same sequence in the terminal and prints each
 transaction and state.
+
+## 5-minute judge demo (dashboard)
+
+Before judging: `cd app && npm run local`, open <http://localhost:5173> at 100% zoom, press **Reset chain**.
+
+| Time | Screen | Say |
+|---|---|---|
+| 0:00 | Overview | "DeFi lending depends on price oracles, but multiple sources agreeing does not necessarily mean the market is safe. ASO Sentinel separates authenticity from economic safety." Point at the pipeline: sources → verifier → risk engine → Sentinel → debt ceiling. |
+| 0:30 | Overview | "ASOVerifier checks signatures, quorum, freshness, replay protection and source agreement. ASORiskEngine checks the market itself — TWAP deviation, velocity, source divergence, upstream conditions, manipulation economics. OriginSentinel turns that into a borrowing policy. It never changes the price." |
+| 1:00 | Presentation, step 1 | "Everything is healthy. Borrowing is open." |
+| 1:15 | step 2 | "The sources now disagree. The Sentinel blocks new borrowing." (right panel: DISPUTED, debt ceiling 0) |
+| 1:40 | step 3 | "Now every source agrees, but the market is assumed thin. The signatures pass while the economic risk rises." (cost gate ELEVATED) |
+| 2:05 | step 4 | "The price is pumped 60%. The risk engine detects it and the Sentinel goes protective." (Bob's borrow: reverted as expected) |
+| 2:30 | step 5 | "Repayment still works. We limit additional exposure; we don't trap users." |
+| 2:50 | step 6 | "The oracle is healthy again, but the system doesn't forget the incident — RECOVERING, still blocked." |
+| 3:10 | step 7 | "After a newer accepted round and the recovery delay, borrowing reopens — limited first, then FRESH." |
+| 3:35 | Validation | "We tested the policy on labelled synthetic risk and healthy cases, plus a holdout set. Here are the false positives and false negatives — the policy is deliberately conservative." Open one FP and one FN row. |
+| 4:15 | Baseline vs Protected | "Same lending logic, same price path. The difference is the Sentinel-controlled debt ceiling." |
+| 4:40 | Evidence | "Here is what is on the public Sepolia testnet (v1 core, source-verified), what is local, and what is modelled. Prototype, not audited, not integrated with Multipli." |
+
+If a step fails: press **Restart from healthy snapshot** in Presentation mode; fallback is `cd demo && npm run demo:origin`.
