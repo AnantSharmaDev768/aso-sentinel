@@ -20,3 +20,7 @@ demo/node_modules/
 .env.*
 !.env.example
 !.env.sepolia.example
+
+# Python bytecode (e.g. from the mutation runner)
+__pycache__/
+*.pyc
