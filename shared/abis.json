@@ -4796,6 +4796,19 @@
   },
   {
    "type": "function",
+   "name": "F_SOURCE_COVERAGE_MIN",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "",
+     "type": "uint32",
+     "internalType": "uint32"
+    }
+   ],
+   "stateMutability": "view"
+  },
+  {
+   "type": "function",
    "name": "F_SOURCE_DIVERGENCE",
    "inputs": [],
    "outputs": [
@@ -4849,6 +4862,19 @@
   {
    "type": "function",
    "name": "F_VAT_ABOVE_EFFECTIVE",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "",
+     "type": "uint32",
+     "internalType": "uint32"
+    }
+   ],
+   "stateMutability": "view"
+  },
+  {
+   "type": "function",
+   "name": "F_VAT_ABOVE_TWAP",
    "inputs": [],
    "outputs": [
     {
@@ -5169,6 +5195,25 @@
   },
   {
    "type": "function",
+   "name": "policyLine",
+   "inputs": [
+    {
+     "name": "s",
+     "type": "uint8",
+     "internalType": "enum OriginSentinel.State"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "",
+     "type": "uint256",
+     "internalType": "uint256"
+    }
+   ],
+   "stateMutability": "view"
+  },
+  {
+   "type": "function",
    "name": "previousState",
    "inputs": [],
    "outputs": [
@@ -5313,6 +5358,19 @@
        "internalType": "uint32"
       }
      ]
+    }
+   ],
+   "outputs": [],
+   "stateMutability": "nonpayable"
+  },
+  {
+   "type": "function",
+   "name": "setVatCheck",
+   "inputs": [
+    {
+     "name": "mode",
+     "type": "uint8",
+     "internalType": "enum OriginSentinel.VatCheck"
     }
    ],
    "outputs": [],
@@ -5590,6 +5648,19 @@
   },
   {
    "type": "function",
+   "name": "vatCheck",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "",
+     "type": "uint8",
+     "internalType": "enum OriginSentinel.VatCheck"
+    }
+   ],
+   "stateMutability": "view"
+  },
+  {
+   "type": "function",
    "name": "vatPrice",
    "inputs": [],
    "outputs": [
@@ -5824,6 +5895,19 @@
        "internalType": "uint32"
       }
      ]
+    }
+   ],
+   "anonymous": false
+  },
+  {
+   "type": "event",
+   "name": "VatCheckSet",
+   "inputs": [
+    {
+     "name": "mode",
+     "type": "uint8",
+     "indexed": false,
+     "internalType": "enum OriginSentinel.VatCheck"
     }
    ],
    "anonymous": false

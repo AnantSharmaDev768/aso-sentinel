@@ -6,6 +6,12 @@ import { createOrigin, LOCAL_CHAIN_ID, type Origin, type TxRecord } from '../../
 
 export const RPC_URL: string = import.meta.env.VITE_RPC_URL ?? 'http://127.0.0.1:8545'
 
+/** anvil is started with --timestamp 1_800_000_000 (app/scripts/local.mjs); chain time is shown relative to it. */
+export const SIM_START = 1_800_000_000
+export function simTime(ts: bigint | number, fmt: (s: number) => string): string {
+  return `T+${fmt(Math.max(0, Number(ts) - SIM_START))}`
+}
+
 // anvil's PUBLIC default test keys. Used only against a local anvil chain (chain id 31337); the dashboard
 // refuses to send transactions anywhere else. They are not secrets and must never hold real funds.
 const LOCAL_TEST_KEYS = [

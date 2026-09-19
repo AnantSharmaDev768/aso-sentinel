@@ -1,11 +1,11 @@
 // Presentation-side risk helpers. Enforcement lives on-chain (OriginSentinel); these only EXPLAIN it.
 
 export const STATE_INFO = [
-  { name: 'FRESH', tone: 'ok', borrowing: 'Open', meaning: 'Data is valid and recent, no risk signal. Borrowing within the gap, maxLine and the epoch cap.' },
-  { name: 'WATCH', tone: 'watch', borrowing: 'Limited', meaning: 'A warning signal is active. Borrowing is limited to a share of the normal headroom.' },
-  { name: 'DISPUTED', tone: 'disputed', borrowing: 'Blocked', meaning: 'Sources disagree beyond tolerance. New debt is blocked.' },
-  { name: 'PROTECTIVE', tone: 'danger', borrowing: 'Blocked', meaning: 'Integrity failure or material market risk. New debt is blocked.' },
-  { name: 'RECOVERING', tone: 'recover', borrowing: 'Blocked', meaning: 'Signals are healthy again. Waiting for a new accepted round and the recovery delay.' },
+  { name: 'FRESH', tone: 'ok', borrowing: 'Open', short: 'Healthy oracle state', effect: 'Borrowing open', line: 'min(debt + gap, maxLine, epoch cap)', meaning: 'Data is valid and recent, no risk signal. Borrowing within the gap, maxLine and the epoch cap.' },
+  { name: 'WATCH', tone: 'watch', borrowing: 'Limited', short: 'Warning signal active', effect: 'Borrowing limited', line: 'debt + 25% of gap (capped)', meaning: 'A warning signal is active. Borrowing is limited to a share of the normal headroom.' },
+  { name: 'DISPUTED', tone: 'disputed', borrowing: 'Blocked', short: 'Oracle disagreement detected', effect: 'New borrowing blocked', line: 'debt ceiling = 0', meaning: 'Sources disagree beyond tolerance. New debt is blocked.' },
+  { name: 'PROTECTIVE', tone: 'danger', borrowing: 'Blocked', short: 'New borrowing blocked', effect: 'Debt ceiling = 0', line: 'debt ceiling = 0', meaning: 'Integrity failure or material market risk. New debt is blocked.' },
+  { name: 'RECOVERING', tone: 'recover', borrowing: 'Blocked', short: 'Waiting for recovery conditions', effect: 'Waiting for delay + new round', line: 'debt ceiling = 0', meaning: 'Signals are healthy again. Waiting for a new accepted round and the recovery delay.' },
 ] as const
 
 export type Tone = (typeof STATE_INFO)[number]['tone'] | 'muted'

@@ -50,11 +50,32 @@ contract OriginSentinel is Ownable2Step {
     uint32 public constant F_COST_NO_DATA = 1 << 12;
     uint32 public constant F_TWAP_INSUFFICIENT = 1 << 13;
     uint32 public constant F_SOURCE_DIVERGENCE = 1 << 14;
+    /// @notice The latest round's per-source record shows only the minimum quorum signing: no redundancy left,
+    /// one more unavailable source stops new rounds. Degraded availability, so borrowing is limited (WATCH).
+    uint32 public constant F_SOURCE_COVERAGE_MIN = 1 << 15;
+    /// @notice (GRADED mode only) The Vat lends above the 6 h TWAP by more than the TWAP watch band: limit borrowing.
+    uint32 public constant F_VAT_ABOVE_TWAP = 1 << 16;
+
+    /// @notice How the Vat's lending price is checked.
+    ///   CONSERVATIVE (default): Vat > min(attested, TWAP) × (1 + maxPriceGap)   → PROTECTIVE
+    ///       The Vat must not lend more than the tolerance above the conservative valuation min(market, 6 h average).
+    ///   GRADED (evaluated alternative, not the default):
+    ///                           Vat > attested × (1 + maxPriceGap)               → PROTECTIVE
+    ///                           Vat > TWAP × (1 + twapWatch)                     → WATCH
+    /// GRADED was evaluated against the baseline on the main and holdout validation suites (docs/VALIDATION.md §2):
+    /// it changed no TP/FN/TN/FP count, removed ~2 frozen hours per honest rally, and shortened the freeze during
+    /// sustained manipulations by the same amount. It is kept only so that comparison stays reproducible.
+    enum VatCheck {
+        CONSERVATIVE,
+        GRADED
+    }
+
+    VatCheck public vatCheck = VatCheck.CONSERVATIVE;
 
     uint32 public constant PROTECT_MASK = F_ASO_HALTED | F_ASO_NO_DATA | F_ASO_STALE | F_FEED_STALE
         | F_VAT_ABOVE_EFFECTIVE | F_TWAP_DEVIATION_PROTECT | F_VELOCITY_PROTECT | F_COST_HIGH;
     uint32 public constant WATCH_MASK = F_TWAP_DEVIATION_WATCH | F_VELOCITY_WATCH | F_COST_ELEVATED | F_COST_NO_DATA
-        | F_TWAP_INSUFFICIENT | F_SOURCE_DIVERGENCE;
+        | F_TWAP_INSUFFICIENT | F_SOURCE_DIVERGENCE | F_SOURCE_COVERAGE_MIN | F_VAT_ABOVE_TWAP;
 
     uint256 internal constant RAY = 1e27;
     uint256 internal constant BPS = 10_000;
@@ -144,6 +165,7 @@ contract OriginSentinel is Ownable2Step {
     event LimitsSet(uint256 maxLine, uint256 gap, uint16 watchGapBps, uint16 maxPriceGapBps);
     event ThresholdsSet(Thresholds t);
     event EpochConfigSet(uint64 duration, uint256 growthCap);
+    event VatCheckSet(VatCheck mode);
 
     error InvalidLimits();
     error InvalidThresholds();
@@ -178,6 +200,13 @@ contract OriginSentinel is Ownable2Step {
     function assess() public view returns (State target, uint32 flags) {
         flags = _flags();
         target = _target(flags);
+    }
+
+    /// @notice The debt ceiling [rad] the Sentinel would set if it entered state `s` now: the state/action
+    /// policy, read from the same code poke() uses. FRESH and WATCH differ only in headroom; the three
+    /// restricted states always return 0.
+    function policyLine(State s) external view returns (uint256) {
+        return _lineFor(s);
     }
 
     function isRestricted(State s) public pure returns (bool) {
@@ -284,6 +313,11 @@ contract OriginSentinel is Ownable2Step {
         _setEpochConfig(e);
     }
 
+    function setVatCheck(VatCheck mode) external onlyOwner {
+        vatCheck = mode;
+        emit VatCheckSet(mode);
+    }
+
     // =====================================================================
     // Internal
     // =====================================================================
@@ -317,7 +351,13 @@ contract OriginSentinel is Ownable2Step {
     function _priceFlags() internal view returns (uint32 f) {
         Thresholds memory t = thresholds;
         (uint256 eff, bool twapOk) = riskEngine.effectivePrice();
-        if (vatPrice() * BPS > eff * (BPS + limits.maxPriceGapBps)) f |= F_VAT_ABOVE_EFFECTIVE;
+        uint256 vp = vatPrice();
+        if (vatCheck == VatCheck.CONSERVATIVE) {
+            if (vp * BPS > eff * (BPS + limits.maxPriceGapBps)) f |= F_VAT_ABOVE_EFFECTIVE;
+        } else {
+            if (vp * BPS > verifier.price() * (BPS + limits.maxPriceGapBps)) f |= F_VAT_ABOVE_EFFECTIVE;
+            if (twapOk && vp * BPS > eff * (BPS + t.twapWatchBps)) f |= F_VAT_ABOVE_TWAP;
+        }
         if (!twapOk) {
             f |= F_TWAP_INSUFFICIENT;
         } else {
@@ -346,6 +386,7 @@ contract OriginSentinel is Ownable2Step {
         uint256 m = verifier.price();
         uint256 diff = wm > m ? wm - m : m - wm;
         if (diff * BPS >= m * thresholds.sourceDivergenceBps) f |= F_SOURCE_DIVERGENCE;
+        if (riskEngine.weightedSourceCount() <= verifier.quorum()) f |= F_SOURCE_COVERAGE_MIN;
     }
 
     function _mat() internal view returns (uint256 mat) {

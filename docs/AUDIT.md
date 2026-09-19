@@ -268,3 +268,42 @@ mutants. 36/36 are killed.
 README: TWAP capture by sustained manipulation (bounded, not prevented); governance-supplied depth and weights;
 keeper dependency; no collateral-withdrawal gate; no vault-integrity check (not expressible against the
 Vat's interface).
+
+## J. Judge-feedback round: policy, validation and a skeptical re-review
+
+Scope: `policyLine`, `F_SOURCE_COVERAGE_MIN`, the `vatCheck` modes in `src/OriginSentinel.sol`; the validation
+harness (`shared/validation.mjs`, `demo/run-validation.mjs`); the dashboard. Internal AI-assisted review, **not** an
+external audit. v1 contracts and vendored Multipli code remain byte-identical to `main`.
+
+**What was added and how it is evidenced**
+
+| Change | Evidence |
+|---|---|
+| `policyLine(state)` — the state→action policy, readable on-chain from the same code `poke()` applies | `test/OriginPolicy.t.sol` (21 tests incl. a fuzzed "restricted states never raise capacity"); validation checks `line == policyLine(state)` at every poke |
+| `F_SOURCE_COVERAGE_MIN` — minimum-quorum source coverage → WATCH | `test_Availability_*` (5/5, 4/5 FRESH; 3/5 WATCH; 2/5, 0/5 PROTECTIVE once stale); validation S5–S0, X19; mutant |
+| `vatCheck` — CONSERVATIVE (default, original rule) and GRADED (evaluated, rejected) | `test_VatCheck_*`; baseline / candidate / final result sets in `validation/`; two mutants |
+
+**Findings of the skeptical re-review**
+
+1. **(Low) `recordSources` is first-come and chooses the subset.** Anyone may record the latest round with any
+   ≥ quorum subset of its valid signatures. A griefer can record exactly the quorum to raise `SOURCE_COVERAGE_MIN`
+   (WATCH) for that round, or pick a subset whose weighted median hides or triggers `SOURCE_DIVERGENCE`. Impact is
+   bounded to WATCH-level signals for one round; it cannot open borrowing or reach PROTECTIVE. Mitigation (future):
+   restrict recording to the relayer that submitted the round, or have the verifier store the submitted signer set.
+2. **(Info) Coverage signal depends on configuration.** With `quorum == number of sources` every record is
+   "minimum coverage", so the market would sit in WATCH permanently. Consistent with the signal's meaning (no
+   redundancy), but a governance footgun; documented.
+3. **(Info) `setVatCheck` lets the owner select the weaker GRADED rule.** Same trust assumption as every other
+   owner-bounded parameter; emits `VatCheckSet`; a mutant ensures the default cannot silently change.
+4. **(Design, measured) Honest volatile markets are often restricted.** Final rules: 4 of 8 healthy main-suite
+   cases and 5 of 7 holdout cases are restricted at some point (most restrictions come from the fixed 2% tolerance
+   against a 1–2 h lagged OSM). Reported, analysed per case, not tuned away.
+5. **(Design, measured) Sustained manipulation lapses.** A4 and X11: protection holds for 6 of 8–10 hours, then
+   borrowing reopens while the manipulated price persists. Bounded by the epoch growth cap, not prevented.
+6. **(Harness) A few seconds of timestamp jitter.** anvil block times advance with wall-clock time; a case sitting
+   exactly on a threshold can flip one poke's state between runs (observed once, X2). Outcomes and final states were
+   identical across every repeated run; `--check` compares those.
+7. **(Harness) Probes use one vault.** Borrow/repay probes are `eth_call`s from Alice's vault (100 PAXG, 50k debt).
+   They show whether the Vat would accept a 1,000 rwaUSD change, not market-wide capacity.
+8. **(Scope) Unchanged limits.** Liquidations and collateral withdrawal at a stale-high price are outside Origin's
+   scope; keeper latency is excluded from measured detection latency; demo sources are team keys.

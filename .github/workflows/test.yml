@@ -60,6 +60,9 @@ jobs:
       - name: Origin demo (items 1-16, scenarios A-E, presentation sequence)
         run: npm run demo:origin
         working-directory: demo
+      - name: Validation suite (final rules, main + holdout) — outcomes must match the committed results
+        run: npm run validate -- --check
+        working-directory: demo
 
   app:
     name: Dashboard (lint, unit tests, build, local deploy smoke test)

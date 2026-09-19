@@ -1,0 +1,3131 @@
+{
+ "meta": {
+  "rules": "baseline",
+  "ruleDescription": "original rules: Vat price checked against min(attested, TWAP) + 2% → PROTECTIVE",
+  "suite": "holdout",
+  "generatedAt": "2026-09-19T16:14:43.293Z",
+  "durationSeconds": 31,
+  "gitCommit": "3591d5e",
+  "workingTreeClean": false,
+  "forge": "forge Version: 1.8.3",
+  "network": "local anvil (chain id 31337) — synthetic prices, anvil test keys",
+  "command": "cd demo && npm run validate -- --rules=baseline --suite=holdout"
+ },
+ "config": {
+  "vatCheck": "CONSERVATIVE",
+  "quorum": 3,
+  "sources": 5,
+  "maxAgeSeconds": 3600,
+  "maxDeviationBps": 100,
+  "twapWindowSeconds": 21600,
+  "twapMinCoverageBps": 5000,
+  "twapWatchBps": 300,
+  "twapProtectBps": 1500,
+  "velocityWatchBpsPerHour": 500,
+  "velocityProtectBpsPerHour": 2000,
+  "sourceDivergenceBps": 50,
+  "recoveryDelaySeconds": 3600,
+  "gapRwa": 200000,
+  "maxLineRwa": 1000000,
+  "watchGapBps": 2500,
+  "maxPriceGapBps": 200,
+  "epochSeconds": 86400,
+  "epochGrowthCapRwa": 100000,
+  "depthUsdPer1Pct": 250000,
+  "lossShareBps": 5000,
+  "elevatedRatioBps": 30000,
+  "highRatioBps": 10000,
+  "matPct": 140
+ },
+ "summary": {
+  "total": 19,
+  "risk": 11,
+  "healthy": 7,
+  "degraded": 1,
+  "TP": 10,
+  "FN": 1,
+  "TN": 2,
+  "FP": 5,
+  "degradedMatch": 1,
+  "degradedMismatch": 0,
+  "healthyPokes": 34,
+  "healthyRestrictedPokes": 19,
+  "healthyBlockedPokes": 12,
+  "precision": 0.6666666666666666,
+  "recall": 0.9090909090909091,
+  "falsePositiveRate": 0.7142857142857143,
+  "verifierRejections": 0,
+  "latency": {
+   "cases": 10,
+   "min": 0,
+   "median": 0,
+   "max": 2700
+  },
+  "pokes": 67,
+  "invariantChecks": 335,
+  "invariantViolations": 0,
+  "transitions": 26,
+  "transitionViolations": 0,
+  "errors": 0,
+  "passed": 13
+ },
+ "cases": [
+  {
+   "id": "X1",
+   "group": "Holdout",
+   "truth": "healthy",
+   "title": "Rally +1%/h for 6 h",
+   "description": "Honest rally.",
+   "trigger": "+1%/h",
+   "sources": {
+    "online": 5,
+    "manipulated": 0
+   },
+   "required": "none",
+   "expected": "Ideally FRESH",
+   "expectedState": "FRESH",
+   "lastPrices": [
+    2653.8,
+    2653.8,
+    2653.8,
+    2653.8,
+    2653.8
+   ],
+   "actual": {
+    "finalState": "WATCH",
+    "finalPolicy": "limited",
+    "finalLine": "100000000000000000000000000000000000000000000000000",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "50000000000000000000000000000000000000000000000000",
+    "statesSeen": [
+     "FRESH",
+     "WATCH"
+    ],
+    "borrowProbeFinal": true,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 6
+   },
+   "outcome": "FP",
+   "detected": null,
+   "lapsed": false,
+   "latencySeconds": null,
+   "latencyNote": "restricted at 3 of 6 pokes (worst: WATCH)",
+   "restriction": {
+    "pokes": 3,
+    "of": 6,
+    "worst": "WATCH",
+    "causes": [
+     "TWAP_DEVIATION_WATCH"
+    ],
+    "blockedPokes": 0,
+    "returnedToFresh": false
+   },
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→WATCH"
+   ],
+   "transitionViolations": [],
+   "pokes": 6,
+   "observations": [
+    {
+     "label": "$2525",
+     "t": 1800021676,
+     "block": 41,
+     "tx": "0x067081595caf94eaefc02c5d167f11838781414669a4dd3c7f7de4329d8cf3a9",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2550.25",
+     "t": 1800025276,
+     "block": 50,
+     "tx": "0x411a31436bdcd2a15edd0ab40c30374942ab803ab006742461814497e8b66801",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2575.75",
+     "t": 1800028877,
+     "block": 59,
+     "tx": "0x68dc55f25cdf9a4978c32f9064b1126b2d1b5c014edaa882a3805e507943f457",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2601.51",
+     "t": 1800032477,
+     "block": 68,
+     "tx": "0x5494920de44df05daee800f778ebb17ccca95f0d3d9e3541215a9579fa339f43",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→WATCH",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2627.53",
+     "t": 1800036078,
+     "block": 77,
+     "tx": "0x06658786068f4007d4b10855e786e32804f7c6b83e2b28e325f6b97001d8200e",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2653.8",
+     "t": 1800039678,
+     "block": 86,
+     "tx": "0x6505fdfa3a969e107c2b18c7dcedf418ab61a274d45907e76403d97bd41a16e5",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": null,
+   "endT": null,
+   "error": null,
+   "pass": false
+  },
+  {
+   "id": "X2",
+   "group": "Holdout",
+   "truth": "healthy",
+   "title": "Rally +3%/h for 5 h",
+   "description": "Honest strong rally.",
+   "trigger": "+3%/h",
+   "sources": {
+    "online": 5,
+    "manipulated": 0
+   },
+   "required": "none",
+   "expected": "Ideally FRESH",
+   "expectedState": "FRESH",
+   "lastPrices": [
+    2898.18,
+    2898.18,
+    2898.18,
+    2898.18,
+    2898.18
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "WATCH",
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 5
+   },
+   "outcome": "FP",
+   "detected": null,
+   "lapsed": false,
+   "latencySeconds": null,
+   "latencyNote": "restricted at 5 of 5 pokes (worst: PROTECTIVE)",
+   "restriction": {
+    "pokes": 5,
+    "of": 5,
+    "worst": "PROTECTIVE",
+    "causes": [
+     "TWAP_DEVIATION_WATCH",
+     "VAT_ABOVE_EFFECTIVE"
+    ],
+    "blockedPokes": 2,
+    "returnedToFresh": false
+   },
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→WATCH",
+    "WATCH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 5,
+   "observations": [
+    {
+     "label": "$2575",
+     "t": 1800021679,
+     "block": 41,
+     "tx": "0x3c4c987150f20f78313cce5b24a7a61a2d454cb23a9bc7bb8166778c32f08056",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→WATCH",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2652.25",
+     "t": 1800025280,
+     "block": 50,
+     "tx": "0xca291c620a8487da4132eb0ff90490fac4c6e5c58ddc715b10435556883e1d97",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2731.82",
+     "t": 1800028880,
+     "block": 59,
+     "tx": "0x5bc4b56e626800ae679c5a6cd030731a7ee1ca329f8937c1c6151a4dff92a938",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2813.77",
+     "t": 1800032481,
+     "block": 68,
+     "tx": "0x7770a983cdc2ccd643daf1d2948cdef1bea27cb99e392b71cad9062a5ab4a18c",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "WATCH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2898.18",
+     "t": 1800036081,
+     "block": 77,
+     "tx": "0xda1dccaff3ffe624966007fa73e9d2cb9b4f281876e312178cc3126123f7dca0",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": null,
+   "endT": null,
+   "error": null,
+   "pass": false
+  },
+  {
+   "id": "X3",
+   "group": "Holdout",
+   "truth": "healthy",
+   "title": "Decline −1%/h for 6 h",
+   "description": "Honest decline.",
+   "trigger": "−1%/h",
+   "sources": {
+    "online": 5,
+    "manipulated": 0
+   },
+   "required": "none",
+   "expected": "Ideally FRESH",
+   "expectedState": "FRESH",
+   "lastPrices": [
+    2353.7,
+    2353.7,
+    2353.7,
+    2353.7,
+    2353.7
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "FRESH",
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 6
+   },
+   "outcome": "FP",
+   "detected": null,
+   "lapsed": false,
+   "latencySeconds": null,
+   "latencyNote": "restricted at 5 of 6 pokes (worst: PROTECTIVE)",
+   "restriction": {
+    "pokes": 5,
+    "of": 6,
+    "worst": "PROTECTIVE",
+    "causes": [
+     "VAT_ABOVE_EFFECTIVE",
+     "TWAP_DEVIATION_WATCH"
+    ],
+    "blockedPokes": 5,
+    "returnedToFresh": false
+   },
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 6,
+   "observations": [
+    {
+     "label": "$2475",
+     "t": 1800021682,
+     "block": 41,
+     "tx": "0x65b70b38c74373ede282ea7303fa633f5bd77da64da236327823e9a6cfedb94c",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2450.25",
+     "t": 1800025282,
+     "block": 50,
+     "tx": "0xaffd1b4ad90fcc8953a37b5115e8c00a44bf962f74ee19c96256add7e9e8c140",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2425.75",
+     "t": 1800028883,
+     "block": 59,
+     "tx": "0x9f65772d55f3ef07d6b281ccf39fd167a51de0bdfcd8d0bca48a2bf33de3487d",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2401.49",
+     "t": 1800032483,
+     "block": 68,
+     "tx": "0xf8842fa1522c00c4fc0007cd4a187661da0d2ef7cc7235c2163c9367b02b67f8",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2377.47",
+     "t": 1800036084,
+     "block": 77,
+     "tx": "0x06658786068f4007d4b10855e786e32804f7c6b83e2b28e325f6b97001d8200e",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2353.7",
+     "t": 1800039684,
+     "block": 86,
+     "tx": "0x6505fdfa3a969e107c2b18c7dcedf418ab61a274d45907e76403d97bd41a16e5",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": null,
+   "endT": null,
+   "error": null,
+   "pass": false
+  },
+  {
+   "id": "X4",
+   "group": "Holdout",
+   "truth": "healthy",
+   "title": "Step −4% then flat",
+   "description": "Honest one-hour −4% move, then 3 flat hours.",
+   "trigger": "−4%",
+   "sources": {
+    "online": 5,
+    "manipulated": 0
+   },
+   "required": "none",
+   "expected": "Ideally FRESH",
+   "expectedState": "FRESH",
+   "lastPrices": [
+    2400,
+    2400,
+    2400,
+    2400,
+    2400
+   ],
+   "actual": {
+    "finalState": "FRESH",
+    "finalPolicy": "normal",
+    "finalLine": "100000000000000000000000000000000000000000000000000",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "50000000000000000000000000000000000000000000000000",
+    "statesSeen": [
+     "PROTECTIVE",
+     "RECOVERING",
+     "FRESH"
+    ],
+    "borrowProbeFinal": true,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 4
+   },
+   "outcome": "FP",
+   "detected": null,
+   "lapsed": false,
+   "latencySeconds": null,
+   "latencyNote": "restricted at 3 of 4 pokes (worst: RECOVERING)",
+   "restriction": {
+    "pokes": 3,
+    "of": 4,
+    "worst": "RECOVERING",
+    "causes": [
+     "VAT_ABOVE_EFFECTIVE",
+     "TWAP_DEVIATION_WATCH"
+    ],
+    "blockedPokes": 3,
+    "returnedToFresh": true
+   },
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE",
+    "PROTECTIVE→RECOVERING",
+    "RECOVERING→FRESH"
+   ],
+   "transitionViolations": [],
+   "pokes": 4,
+   "observations": [
+    {
+     "label": "$2400",
+     "t": 1800021685,
+     "block": 41,
+     "tx": "0xdc5378e9a82ec40d32b3d3cc977b9cd8a332b7bca7ac35d715f2fa8dd1704895",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2400",
+     "t": 1800025285,
+     "block": 50,
+     "tx": "0x96d3df98a301b72ace651a321968f79623d7b22e7cdd35fd0f8171e3de4c598f",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2400",
+     "t": 1800028886,
+     "block": 59,
+     "tx": "0x655ea57d4294934fb74a05e26e8ee7644304230fb3ab409f2c9a256f9c3201e3",
+     "state": "RECOVERING",
+     "stateIdx": 4,
+     "target": "FRESH",
+     "flags": [],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "PROTECTIVE→RECOVERING",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2400",
+     "t": 1800032486,
+     "block": 68,
+     "tx": "0x193ca3f18510072af428d82020b2b5aa037a2050ac8d5fc90d881d351fc5af53",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "RECOVERING→FRESH",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": null,
+   "endT": null,
+   "error": null,
+   "pass": false
+  },
+  {
+   "id": "X5",
+   "group": "Holdout",
+   "truth": "healthy",
+   "title": "Noise ±1.5% for 6 h",
+   "description": "Honest oscillation around $2,500.",
+   "trigger": "±1.5%",
+   "sources": {
+    "online": 5,
+    "manipulated": 0
+   },
+   "required": "none",
+   "expected": "Ideally FRESH",
+   "expectedState": "FRESH",
+   "lastPrices": [
+    2462.5,
+    2462.5,
+    2462.5,
+    2462.5,
+    2462.5
+   ],
+   "actual": {
+    "finalState": "FRESH",
+    "finalPolicy": "normal",
+    "finalLine": "100000000000000000000000000000000000000000000000000",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "50000000000000000000000000000000000000000000000000",
+    "statesSeen": [
+     "FRESH"
+    ],
+    "borrowProbeFinal": true,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 6
+   },
+   "outcome": "TN",
+   "detected": null,
+   "lapsed": false,
+   "latencySeconds": null,
+   "latencyNote": null,
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [],
+   "transitionViolations": [],
+   "pokes": 6,
+   "observations": [
+    {
+     "label": "$2537.5",
+     "t": 1800021687,
+     "block": 41,
+     "tx": "0xdc5378e9a82ec40d32b3d3cc977b9cd8a332b7bca7ac35d715f2fa8dd1704895",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2462.5",
+     "t": 1800025288,
+     "block": 50,
+     "tx": "0x411a31436bdcd2a15edd0ab40c30374942ab803ab006742461814497e8b66801",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2537.5",
+     "t": 1800028888,
+     "block": 59,
+     "tx": "0x3a94740b6900fc52cdddc8b11270f9c3cbd7f880b394700c622ce87eafb659d3",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2462.5",
+     "t": 1800032489,
+     "block": 68,
+     "tx": "0xe54e45b712c1ef509d419bb3846ee7fe2ffae3cfdf4dc87a3e1ebd38fcd1613b",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2537.5",
+     "t": 1800036089,
+     "block": 77,
+     "tx": "0x06658786068f4007d4b10855e786e32804f7c6b83e2b28e325f6b97001d8200e",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2462.5",
+     "t": 1800039690,
+     "block": 86,
+     "tx": "0x6505fdfa3a969e107c2b18c7dcedf418ab61a274d45907e76403d97bd41a16e5",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": null,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X6",
+   "group": "Holdout",
+   "truth": "healthy",
+   "title": "Spike +4% then back",
+   "description": "Honest one-hour +4% spike, then back to $2,500.",
+   "trigger": "+4% for 1 h",
+   "sources": {
+    "online": 5,
+    "manipulated": 0
+   },
+   "required": "none",
+   "expected": "Ideally FRESH",
+   "expectedState": "FRESH",
+   "lastPrices": [
+    2500,
+    2500,
+    2500,
+    2500,
+    2500
+   ],
+   "actual": {
+    "finalState": "RECOVERING",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "WATCH",
+     "FRESH",
+     "PROTECTIVE",
+     "RECOVERING"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 4
+   },
+   "outcome": "FP",
+   "detected": null,
+   "lapsed": false,
+   "latencySeconds": null,
+   "latencyNote": "restricted at 3 of 4 pokes (worst: RECOVERING)",
+   "restriction": {
+    "pokes": 3,
+    "of": 4,
+    "worst": "RECOVERING",
+    "causes": [
+     "TWAP_DEVIATION_WATCH",
+     "VAT_ABOVE_EFFECTIVE"
+    ],
+    "blockedPokes": 2,
+    "returnedToFresh": false
+   },
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→WATCH",
+    "WATCH→FRESH",
+    "FRESH→PROTECTIVE",
+    "PROTECTIVE→RECOVERING"
+   ],
+   "transitionViolations": [],
+   "pokes": 4,
+   "observations": [
+    {
+     "label": "$2600",
+     "t": 1800021690,
+     "block": 41,
+     "tx": "0xdc5378e9a82ec40d32b3d3cc977b9cd8a332b7bca7ac35d715f2fa8dd1704895",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→WATCH",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2500",
+     "t": 1800025291,
+     "block": 50,
+     "tx": "0xdd4ec935781c5ea62d7219ad9448fc444c055807ad34bd36bda6930cb2dedd4a",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "WATCH→FRESH",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2500",
+     "t": 1800028891,
+     "block": 59,
+     "tx": "0x036fced8f0630db5884020e4efbb3ce967436f01e2c05fa5206752add16d15c6",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2500",
+     "t": 1800032492,
+     "block": 68,
+     "tx": "0x72d5b7af82e538f02181a373e8e8e5cc137784a4e10b164a2f1e3ccf8c0be421",
+     "state": "RECOVERING",
+     "stateIdx": 4,
+     "target": "FRESH",
+     "flags": [],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "PROTECTIVE→RECOVERING",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": null,
+   "endT": null,
+   "error": null,
+   "pass": false
+  },
+  {
+   "id": "X7",
+   "group": "Holdout",
+   "truth": "healthy",
+   "title": "Flat, 4 of 5 sources",
+   "description": "Stable market, one source offline.",
+   "trigger": "1 source offline",
+   "sources": {
+    "online": 4,
+    "manipulated": 0
+   },
+   "required": "none",
+   "expected": "Ideally FRESH",
+   "expectedState": "FRESH",
+   "lastPrices": [
+    2500,
+    2500,
+    2500,
+    2500
+   ],
+   "actual": {
+    "finalState": "FRESH",
+    "finalPolicy": "normal",
+    "finalLine": "100000000000000000000000000000000000000000000000000",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "50000000000000000000000000000000000000000000000000",
+    "statesSeen": [
+     "FRESH"
+    ],
+    "borrowProbeFinal": true,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 3
+   },
+   "outcome": "TN",
+   "detected": null,
+   "lapsed": false,
+   "latencySeconds": null,
+   "latencyNote": null,
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [],
+   "transitionViolations": [],
+   "pokes": 3,
+   "observations": [
+    {
+     "label": "$2500",
+     "t": 1800021692,
+     "block": 41,
+     "tx": "0x85107f0fff7de118de1e1162ae478d435c445045d87714bc0e4ebab9de1d8128",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2500",
+     "t": 1800025293,
+     "block": 50,
+     "tx": "0x7135f06452963d895e0bbad4ff15215824c021e93dea442046fd559c33ebc4ec",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2500",
+     "t": 1800028893,
+     "block": 59,
+     "tx": "0xd9c497ec8a0ceac0cbb243d931f09ebcf6f76aca6fb5f6b40dbbdd1ee62cf153",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": null,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X8",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "Pump +20% held 2 h",
+   "description": "The market is manipulated +20% and every source honestly reports it; held 2 h.",
+   "trigger": "+20% for 2 h",
+   "sources": {
+    "online": 5,
+    "manipulated": 5,
+    "note": "sources honest, market manipulated"
+   },
+   "required": "limited",
+   "expected": "Restricted while the manipulation lasts",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    3000,
+    3000,
+    3000,
+    3000,
+    3000
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 2
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 1,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 2,
+   "observations": [
+    {
+     "label": "+20%",
+     "t": 1800021694,
+     "block": 41,
+     "tx": "0x3c4c987150f20f78313cce5b24a7a61a2d454cb23a9bc7bb8166778c32f08056",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800025294,
+     "block": 50,
+     "tx": "0xed7aa183d468ded4dbe7a38f0db2b53509e4908827d382abf6226eecae86107e",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800021693,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X9",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "Pump +45% held 2 h",
+   "description": "The market is manipulated +45% and every source honestly reports it; held 2 h.",
+   "trigger": "+45% for 2 h",
+   "sources": {
+    "online": 5,
+    "manipulated": 5,
+    "note": "sources honest, market manipulated"
+   },
+   "required": "limited",
+   "expected": "Restricted while the manipulation lasts",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    3625,
+    3625,
+    3625,
+    3625,
+    3625
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 2
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 0,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 2,
+   "observations": [
+    {
+     "label": "+45%",
+     "t": 1800021695,
+     "block": 41,
+     "tx": "0x3c4c987150f20f78313cce5b24a7a61a2d454cb23a9bc7bb8166778c32f08056",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800025295,
+     "block": 50,
+     "tx": "0x553baf0a58c7b35ea9a151d6edd4f098a6f6a14e06933cfd56515bb4763c006e",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800021695,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X10",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "Pump +150% held 1 h",
+   "description": "The market is manipulated +150% and every source honestly reports it; held 1 h.",
+   "trigger": "+150% for 1 h",
+   "sources": {
+    "online": 5,
+    "manipulated": 5,
+    "note": "sources honest, market manipulated"
+   },
+   "required": "limited",
+   "expected": "Restricted while the manipulation lasts",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    6250,
+    6250,
+    6250,
+    6250,
+    6250
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 1
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 0,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 1,
+   "observations": [
+    {
+     "label": "+150%",
+     "t": 1800021696,
+     "block": 41,
+     "tx": "0x05a71c1160fa8823f638fbe6ffbc94eedee84e55ed488373f58b11261191e09c",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800021696,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X11",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "Pump +45% held 8 h, thin market",
+   "description": "The market is manipulated +45% and every source honestly reports it; held 8 h (depth assumption $2,000/1%).",
+   "trigger": "+45% for 8 h",
+   "sources": {
+    "online": 5,
+    "manipulated": 5,
+    "note": "sources honest, market manipulated"
+   },
+   "required": "limited",
+   "expected": "Restricted while the manipulation lasts",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    3625,
+    3625,
+    3625,
+    3625,
+    3625
+   ],
+   "actual": {
+    "finalState": "FRESH",
+    "finalPolicy": "normal",
+    "finalLine": "100000000000000000000000000000000000000000000000000",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "50000000000000000000000000000000000000000000000000",
+    "statesSeen": [
+     "PROTECTIVE",
+     "RECOVERING",
+     "FRESH"
+    ],
+    "borrowProbeFinal": true,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 8
+   },
+   "outcome": "FN",
+   "detected": true,
+   "lapsed": true,
+   "latencySeconds": 1,
+   "latencyNote": "1 poke(s) after onset · lapsed to FRESH while the risk persisted",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE",
+    "PROTECTIVE→RECOVERING",
+    "RECOVERING→FRESH"
+   ],
+   "transitionViolations": [],
+   "pokes": 8,
+   "observations": [
+    {
+     "label": "+45%",
+     "t": 1800021697,
+     "block": 42,
+     "tx": "0x5b5ca83f5aa5c0ebcb33a1d8918bbd0b3b08e16717af5163720450996cb6ef8c",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800025297,
+     "block": 51,
+     "tx": "0xed36e6ca436927fc1ba6b0da972861311e2aa4b9de1aa6bd3f85a67e3d4f99b5",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800028898,
+     "block": 60,
+     "tx": "0x87198d8ef080a671e48d2ffdb1528d9396bbf4d035c00156617bcf31e848cfd7",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800032498,
+     "block": 69,
+     "tx": "0x8a915d29818d5c82b1e1326c0f50c88d180c2bdd8e8e95aba6cf55b9fbaf591b",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800036099,
+     "block": 78,
+     "tx": "0xabc383296041c404f6bf51de7f09c257cc2c6c5984aa2f1d785d50fd0aefb984",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800039699,
+     "block": 87,
+     "tx": "0xfc6dcd5177d97571fe254f9552ef5e417b0589f3b5c75b91e081e9ccbde5b660",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800043300,
+     "block": 96,
+     "tx": "0x98738be92f1c341711c10a30d3208efa35254fa9ae6ed7eb95bc58a941c885ef",
+     "state": "RECOVERING",
+     "stateIdx": 4,
+     "target": "FRESH",
+     "flags": [],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "PROTECTIVE→RECOVERING",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "hold",
+     "t": 1800046900,
+     "block": 105,
+     "tx": "0xcedf2cdf39b7ec4f69df5a52de1a4313114f2e64f986ca54e5c554b08a9892b1",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "RECOVERING→FRESH",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800021696,
+   "endT": null,
+   "error": null,
+   "pass": false
+  },
+  {
+   "id": "X12",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "Creeping +6%/h for 6 h",
+   "description": "Price walked up 6% per hour (+42%).",
+   "trigger": "+6%/h",
+   "sources": {
+    "online": 5,
+    "manipulated": 5,
+    "note": "sources honest, market manipulated"
+   },
+   "required": "limited",
+   "expected": "Restricted",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    3546.29,
+    3546.29,
+    3546.29,
+    3546.29,
+    3546.29
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "WATCH",
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 6
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 0,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→WATCH",
+    "WATCH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 6,
+   "observations": [
+    {
+     "label": "$2650",
+     "t": 1800021701,
+     "block": 41,
+     "tx": "0x3c4c987150f20f78313cce5b24a7a61a2d454cb23a9bc7bb8166778c32f08056",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH",
+      "VELOCITY_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→WATCH",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2809",
+     "t": 1800025301,
+     "block": 50,
+     "tx": "0xdd4ec935781c5ea62d7219ad9448fc444c055807ad34bd36bda6930cb2dedd4a",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "TWAP_DEVIATION_WATCH",
+      "VELOCITY_WATCH"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2977.54",
+     "t": 1800028902,
+     "block": 59,
+     "tx": "0xee93095f4fb342235f5e0bc017e6a1de822727a0055380299034a867bb0af680",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "WATCH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$3156.19",
+     "t": 1800032502,
+     "block": 68,
+     "tx": "0x91879f384fce6024029d7dd7f8da1f4766d984d39d189c1d37f8809cc41d4ce4",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$3345.56",
+     "t": 1800036103,
+     "block": 77,
+     "tx": "0x263cc53ce360765810bf89782b74c8c42ce3c9d5e41b7cecffe51b88f7c00d64",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$3546.29",
+     "t": 1800039703,
+     "block": 86,
+     "tx": "0xf0e79a042e801709d1d5626b5a585a20a211be858346c8909b6ca8c32140439f",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_WATCH"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800021701,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X13",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "3 colluding sources at +20%, only theirs relayed",
+   "description": "A valid 3-of-5 round at +20% while the real market (feed) stays at $2,500.",
+   "trigger": "valid 3/5 round +20%",
+   "sources": {
+    "online": 5,
+    "manipulated": 3,
+    "note": "valid signatures, false price"
+   },
+   "required": "blocked",
+   "expected": "PROTECTIVE",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    3000,
+    3000,
+    3000
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 1
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 1,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 1,
+   "observations": [
+    {
+     "label": "colluding round",
+     "t": 1800018704,
+     "block": 37,
+     "tx": "0xfca266fd421bb26e6c548b6688228b971449ead5c2bc46984c089dae2f1d4cd2",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_PROTECT",
+      "SOURCE_COVERAGE_MIN"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800018703,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X14",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "4 colluding sources at +100%, only theirs relayed",
+   "description": "A valid 4-of-5 round at +100% while the real market (feed) stays at $2,500.",
+   "trigger": "valid 4/5 round +100%",
+   "sources": {
+    "online": 5,
+    "manipulated": 4,
+    "note": "valid signatures, false price"
+   },
+   "required": "blocked",
+   "expected": "PROTECTIVE",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    5000,
+    5000,
+    5000,
+    5000
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 1
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 0,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 1,
+   "observations": [
+    {
+     "label": "colluding round",
+     "t": 1800018704,
+     "block": 37,
+     "tx": "0x707daf71429f9c9009398622399483bd949ff81c8c136f192f5b0e3de883ba41",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800018704,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X15",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "2 of 5 sources at +20%, all relayed",
+   "description": "Two sources lie by +20%; all five signatures are relayed.",
+   "trigger": "2/5 lie +20%",
+   "sources": {
+    "online": 5,
+    "manipulated": 2
+   },
+   "required": "blocked",
+   "expected": "DISPUTED",
+   "expectedState": "DISPUTED",
+   "lastPrices": [
+    3000,
+    3000,
+    2500,
+    2500,
+    2500
+   ],
+   "actual": {
+    "finalState": "DISPUTED",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "DISPUTED"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 0
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 0,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→DISPUTED"
+   ],
+   "transitionViolations": [],
+   "pokes": 1,
+   "observations": [
+    {
+     "label": "mixed",
+     "t": 1800018704,
+     "block": 36,
+     "tx": "0x052c63cb5a3ebb188b5a56b517d2a7b373acca196c70bfb7539053ec4811eff2",
+     "state": "DISPUTED",
+     "stateIdx": 2,
+     "target": "DISPUTED",
+     "flags": [
+      "ASO_DISPUTED"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→DISPUTED",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800018704,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X16",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "Feed frozen, market −15%",
+   "description": "The market falls 15%; sources report it, the Chainlink-style feed and OSM stay at $2,500.",
+   "trigger": "feed frozen, −15%",
+   "sources": {
+    "online": 5,
+    "manipulated": 0,
+    "note": "feed stale"
+   },
+   "required": "blocked",
+   "expected": "PROTECTIVE",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    2125,
+    2125,
+    2125,
+    2125,
+    2125
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 1
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 0,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 1,
+   "observations": [
+    {
+     "label": "sources vs frozen feed",
+     "t": 1800018704,
+     "block": 37,
+     "tx": "0x1390ebc26d666098bc537442f75323a50fdf3bc062268cb568766ac524e0254a",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800018704,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X17",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "Feed frozen, market −60%",
+   "description": "The market falls 60%; sources report it, the Chainlink-style feed and OSM stay at $2,500.",
+   "trigger": "feed frozen, −60%",
+   "sources": {
+    "online": 5,
+    "manipulated": 0,
+    "note": "feed stale"
+   },
+   "required": "blocked",
+   "expected": "PROTECTIVE",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+   ],
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 1
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 1,
+   "latencyNote": "1 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 1,
+   "observations": [
+    {
+     "label": "sources vs frozen feed",
+     "t": 1800018705,
+     "block": 37,
+     "tx": "0x1390ebc26d666098bc537442f75323a50fdf3bc062268cb568766ac524e0254a",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "VAT_ABOVE_EFFECTIVE",
+      "TWAP_DEVIATION_PROTECT",
+      "VELOCITY_PROTECT"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800018704,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X18",
+   "group": "Holdout",
+   "truth": "risk",
+   "title": "1 of 5 sources online for 90 min",
+   "description": "Four sources offline; polled every 15 minutes.",
+   "trigger": "4 sources offline",
+   "sources": {
+    "online": 1,
+    "manipulated": 0
+   },
+   "required": "blocked",
+   "expected": "PROTECTIVE once stale",
+   "expectedState": "PROTECTIVE",
+   "lastPrices": null,
+   "actual": {
+    "finalState": "PROTECTIVE",
+    "finalPolicy": "blocked",
+    "finalLine": "0",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "0",
+    "statesSeen": [
+     "FRESH",
+     "PROTECTIVE"
+    ],
+    "borrowProbeFinal": false,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 0
+   },
+   "outcome": "TP",
+   "detected": true,
+   "lapsed": false,
+   "latencySeconds": 2700,
+   "latencyNote": "4 poke(s) after onset",
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→PROTECTIVE"
+   ],
+   "transitionViolations": [],
+   "pokes": 6,
+   "observations": [
+    {
+     "label": "15 min",
+     "t": 1800019005,
+     "block": 34,
+     "tx": "0x908408dc890ada44e30a5cd1ae722d05e5e28c042c501adbac55589491828e8e",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "30 min",
+     "t": 1800019905,
+     "block": 36,
+     "tx": "0x81084314be570373ef3959f852955e583325912bafba8a8c36cbc29ac63104a7",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "45 min",
+     "t": 1800020805,
+     "block": 38,
+     "tx": "0x97284644a4bff327eaec2e42cfdc5c0aece6bfcb00f18a89e1ce9020144f7feb",
+     "state": "FRESH",
+     "stateIdx": 0,
+     "target": "FRESH",
+     "flags": [],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "60 min",
+     "t": 1800021705,
+     "block": 40,
+     "tx": "0xdf9d0ef344558cd06ee104566fa532e3572c8de896f2325a69a5c93da1d63cc3",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "ASO_STALE"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→PROTECTIVE",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "75 min",
+     "t": 1800022605,
+     "block": 42,
+     "tx": "0x3093e171a44635e97930cf5f9e03d7c4ce39bf75807553221552dddc36595694",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "ASO_STALE"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "90 min",
+     "t": 1800023505,
+     "block": 44,
+     "tx": "0x18af3751c35ea0cacd54f3350bb599e482155f83fb4a7a5acc1d9aa06221d883",
+     "state": "PROTECTIVE",
+     "stateIdx": 3,
+     "target": "PROTECTIVE",
+     "flags": [
+      "ASO_STALE"
+     ],
+     "line": "0",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "0",
+     "borrowOk": false,
+     "borrowReason": "Error(Vat/ceiling-exceeded)",
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800019005,
+   "endT": null,
+   "error": null,
+   "pass": true
+  },
+  {
+   "id": "X19",
+   "group": "Holdout",
+   "truth": "degraded",
+   "title": "3 of 5 sources, rising market",
+   "description": "Exactly the quorum signs a +1%/h market for 3 h.",
+   "trigger": "2 sources offline",
+   "sources": {
+    "online": 3,
+    "manipulated": 0
+   },
+   "required": "limited",
+   "expected": "WATCH (minimum quorum)",
+   "expectedState": "WATCH",
+   "lastPrices": [
+    2575.75,
+    2575.75,
+    2575.75
+   ],
+   "actual": {
+    "finalState": "WATCH",
+    "finalPolicy": "limited",
+    "finalLine": "100000000000000000000000000000000000000000000000000",
+    "finalDebt": "50000000000000000000000000000000000000000000000000",
+    "finalHeadroom": "50000000000000000000000000000000000000000000000000",
+    "statesSeen": [
+     "WATCH"
+    ],
+    "borrowProbeFinal": true,
+    "repayProbeFinal": true,
+    "baselineBorrowFinal": true,
+    "acceptedRounds": 3
+   },
+   "outcome": "MATCH",
+   "detected": null,
+   "lapsed": false,
+   "latencySeconds": 1,
+   "latencyNote": null,
+   "restriction": null,
+   "rejections": [],
+   "checks": [],
+   "invariantViolations": [],
+   "transitions": [
+    "FRESH→WATCH"
+   ],
+   "transitionViolations": [],
+   "pokes": 3,
+   "observations": [
+    {
+     "label": "$2525",
+     "t": 1800021706,
+     "block": 41,
+     "tx": "0xd7b2c4a807e743208833012b7ca83ef18c3087106c62d5fea511734b39452006",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "SOURCE_COVERAGE_MIN"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "FRESH→WATCH",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2550.25",
+     "t": 1800025306,
+     "block": 50,
+     "tx": "0x793cafaf79420ab23354543043a4cbe58a6b5cb987104c57de0357e7955631ba",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "SOURCE_COVERAGE_MIN"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    },
+    {
+     "label": "$2575.75",
+     "t": 1800028907,
+     "block": 59,
+     "tx": "0xa9627b620c3cbdfc4b235c11dbfc8a62d43d7fe99df3570ea76e8cf1096001a0",
+     "state": "WATCH",
+     "stateIdx": 1,
+     "target": "WATCH",
+     "flags": [
+      "SOURCE_COVERAGE_MIN"
+     ],
+     "line": "100000000000000000000000000000000000000000000000000",
+     "debt": "50000000000000000000000000000000000000000000000000",
+     "headroom": "50000000000000000000000000000000000000000000000000",
+     "borrowOk": true,
+     "borrowReason": null,
+     "repayOk": true,
+     "baselineBorrowOk": true,
+     "transition": "none",
+     "transitionOk": true,
+     "invariants": {
+      "spotUnchanged": true,
+      "restrictedZeroLine": true,
+      "lineMatchesPolicy": true,
+      "repayAvailable": true,
+      "restrictedBlocksBorrow": true
+     },
+     "phase": "risk"
+    }
+   ],
+   "onsetT": 1800021705,
+   "endT": null,
+   "error": null,
+   "pass": true
+  }
+ ]
+}

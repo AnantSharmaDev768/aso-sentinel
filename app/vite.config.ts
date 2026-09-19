@@ -14,6 +14,10 @@ export default defineConfig({
           groups: [
             { name: 'chain', test: /node_modules[\\/](viem|ox|abitype|@noble|@scure|@adraffy)[\\/]/ },
             { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            // committed validation results (data, not code): one chunk per rule set
+            { name: 'validation-baseline', test: /validation[\\/]baseline[\\/].*\.json$/ },
+            { name: 'validation-candidate', test: /validation[\\/]candidate-graded[\\/].*\.json$/ },
+            { name: 'validation-final', test: /validation[\\/]final[\\/].*\.json$/ },
           ],
         },
       },
