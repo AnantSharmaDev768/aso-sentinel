@@ -25,3 +25,15 @@ the same scenarios as tests. As a last resort, show the recorded output (see the
 - Tests: 91 passing (unit, fuzz, invariant); 100% branch coverage of our two contracts. All 17 mutants are caught. The demo takes about 10s.
 - Parameters matching Multipli mainnet: 140% `mat`, 1h OSM delay, 24h adapter `maxDelay`, 1M ceiling,
   100 rwaUSD dust.
+
+## Dashboard walkthrough (Origin)
+
+**Setup:** `cd app && npm ci && npm run local`, then open <http://localhost:5173>. Everything runs on a private
+anvil chain with public test accounts; no wallet or internet is needed.
+
+**Run:** open *Presentation mode* and click each step's **Run** (7 steps, about 3 minutes). The right-hand
+panel reads the contracts after every step. **Restart from healthy snapshot** rewinds the chain. The steps
+and narration are listed in the README, section 22.
+
+**Fallback:** `cd demo && npm run demo:origin` runs the same sequence in the terminal and prints each
+transaction and state.

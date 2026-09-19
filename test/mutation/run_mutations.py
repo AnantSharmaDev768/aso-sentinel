@@ -20,10 +20,30 @@ muts = [
  ("src/ASOSentinel.sol","uint256 newLine = 0; // any non-HEALTHY outcome closes the ceiling","uint256 newLine = ilkDebt(); // MUTANT: cap at current debt","restrict to current debt instead of 0"),
  ("src/ASOSentinel.sol","if (vatPrice() * BPS > verifier.price() * (BPS + maxPriceGapBps)) return Reason.VAT_PRICE_ABOVE_ATTESTED;","","overvaluation check removed"),
  ("src/ASOSentinel.sol","if (s == ASOVerifier.Status.DISPUTED) return Reason.ASO_DISPUTED;","","dispute ignored"),
+ # --- Origin // ASO Sentinel (state machine, risk engine, cost model) ---
+ ('src/OriginSentinel.sol', 'next = newRound && waited ? target : State.RECOVERING;', 'next = waited ? target : State.RECOVERING;', 'origin: recovery without new round'),
+ ('src/OriginSentinel.sol', 'next = newRound && waited ? target : State.RECOVERING;', 'next = newRound ? target : State.RECOVERING;', 'origin: recovery without delay'),
+ ('src/OriginSentinel.sol', '        } else if (cur == State.DISPUTED || cur == State.PROTECTIVE) {\n            next = State.RECOVERING;', '        } else if (cur == State.DISPUTED || cur == State.PROTECTIVE) {\n            next = target;', 'origin: direct escape from restriction'),
+ ('src/OriginSentinel.sol', 'if (isRestricted(s)) return 0;', 'if (s == State.PROTECTIVE) return 0;', 'origin: restricted states keep headroom'),
+ ('src/OriginSentinel.sol', 'return Math.min(line, epochStartDebt + epochConfig.growthCap);', 'return line;', 'origin: epoch cap removed'),
+ ('src/OriginSentinel.sol', 'uint256 g = s == State.WATCH ? limits.gap * limits.watchGapBps / BPS : limits.gap;', 'uint256 g = limits.gap;', 'origin: WATCH opens full headroom'),
+ ('src/OriginSentinel.sol', '        epochStartDebt = ilkDebt();\n        emit EpochStarted', '        emit EpochStarted', 'origin: epoch baseline never refreshed'),
+ ('src/OriginSentinel.sol', 'f |= F_VAT_ABOVE_EFFECTIVE;', '{}', 'origin: Vat-above-effective ignored'),
+ ('src/OriginSentinel.sol', 'if (dev >= t.twapProtectBps) f |= F_TWAP_DEVIATION_PROTECT;', 'if (false) {}', 'origin: TWAP protect ignored'),
+ ('src/OriginSentinel.sol', 'if (vel >= t.velocityProtectBpsPerHour) f |= F_VELOCITY_PROTECT;', 'if (false) {}', 'origin: velocity protect ignored'),
+ ('src/OriginSentinel.sol', 'if (c == CostModel.Concern.HIGH) f |= F_COST_HIGH;', 'if (false) {}', 'origin: cost HIGH ignored'),
+ ('src/OriginSentinel.sol', '            restrictedAtNonce = verifier.lastNonce();\n        } else if', '        } else if', 'origin: restriction nonce not recorded'),
+ ('src/risk/ASORiskEngine.sol', 'if (tOk && t < spot) return (t, true);', '', 'engine: effective price ignores TWAP'),
+ ('src/risk/ASORiskEngine.sol', 'ok = coverageBps >= minCoverageBps;', 'ok = true;', 'engine: TWAP coverage not required'),
+ ('src/risk/ASORiskEngine.sol', 'if (accepted == 0 || accepted == lastRecordedNonce) return false;', 'if (accepted == 0) return false;', 'engine: duplicate observations'),
+ ('src/risk/ASORiskEngine.sol', 'if (!verifier.isSigner(signer)) revert NotAnAuthorisedSource(signer);', '', 'engine: source authorisation skipped'),
+ ('src/risk/ASORiskEngine.sol', 'if (signer <= prev) revert SignersNotStrictlyAscending(i);', '', 'engine: duplicate sources allowed'),
+ ('src/risk/CostModel.sol', 'q.costUsd = q.capitalUsd * deviationBps * p.lossShareBps / (BPS * BPS);', 'q.costUsd = q.capitalUsd;', 'cost: loss model replaced by capital'),
+ ('src/risk/WeightedMedian.sol', 'if (acc * 2 >= total) return prices[i];', 'if (acc >= total) return prices[i];', 'median: returns maximum instead'),
 ]
 res=[]
 for f,old,new,name in muts:
-    src=open(f,encoding='utf-8').read()
+    src=open(f,encoding='utf-8').read().replace('\r\n','\n')
     if old not in src: res.append((name,"PATTERN NOT FOUND")); continue
     shutil.copy(f,f+".bak")
     open(f,'w',encoding='utf-8').write(src.replace(old,new,1))
@@ -37,3 +57,8 @@ for f,old,new,name in muts:
     finally:
         shutil.move(f+".bak",f)
 for n,r in res: print(f"{r:28s} <- {n}")
+killed=sum(1 for _,r in res if r.startswith("KILLED"))
+print(f"{killed}/{len(res)} mutants killed")
+if killed != len(res):
+    print("FAIL: every mutant must be killed (a survivor means a security check is untested)")
+    sys.exit(1)
